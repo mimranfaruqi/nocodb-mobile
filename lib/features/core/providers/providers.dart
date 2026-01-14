@@ -9,11 +9,30 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
 
-final workspaceProvider = StateProvider<NcWorkspace?>((ref) => null);
-final projectProvider = StateProvider<NcProject?>((ref) => null);
-final tableProvider = StateProvider<NcTable?>((ref) => null);
+// ✅ Riverpod 3.0: Replace StateProvider with @riverpod class
+@riverpod
+class Workspace extends _$Workspace {
+  @override
+  NcWorkspace? build() => null;
+}
 
-final tablesProvider = StateProvider<NcTables?>((ref) => null);
+@riverpod
+class Project extends _$Project {
+  @override
+  NcProject? build() => null;
+}
+
+@riverpod
+class Table extends _$Table {
+  @override
+  NcTable? build() => null;
+}
+
+@riverpod
+class Tables extends _$Tables {
+  @override
+  NcTables? build() => null;
+}
 
 final isLoadedProvider = Provider<bool>((ref) {
   final table = ref.watch(tableProvider);
@@ -146,8 +165,12 @@ class SearchQuery {
   String toString() => '($columnName,$operator,$query)';
 }
 
-final searchQueryFamily =
-    StateProviderFamily<SearchQuery?, NcView>((ref, view) => null);
+// ✅ Riverpod 3.0: Replace StateProviderFamily with @riverpod
+@riverpod
+class SearchQueryFamily extends _$SearchQueryFamily {
+  @override
+  SearchQuery? build(NcView view) => null;
+}
 
 @riverpod
 class DataRows extends _$DataRows {
@@ -211,7 +234,7 @@ class DataRows extends _$DataRows {
     // final _ = ref.watch(sortListProvider(view.id));
 
     _pkName = table.pkName;
-    final searchQuery = ref.watch(searchQueryFamily(view));
+    final searchQuery = ref.watch(searchQueryFamilyProvider(view));
     logger.info('searchQuery: $searchQuery');
 
     return serialize(
@@ -240,7 +263,7 @@ class DataRows extends _$DataRows {
     final currentRows = value.list;
     final pageInfo = value.pageInfo!;
 
-    final searchQuery = ref.read(searchQueryFamily(view));
+    final searchQuery = ref.read(searchQueryFamilyProvider(view));
     logger.info('searchQuery: $searchQuery');
 
     serialize(
@@ -387,15 +410,23 @@ class DataRows extends _$DataRows {
   }
 }
 
-final rowNestedWhereProvider = StateProvider.family<Where?, NcTableColumn>(
-  (ref, column) => null,
-);
+// ✅ Riverpod 3.0: Replace StateProvider.family with @riverpod
+@riverpod
+class RowNestedWhere extends _$RowNestedWhere {
+  @override
+  Where? build(NcTableColumn column) => null;
+}
 
 typedef PrimaryRecord = (String key, dynamic value);
 typedef PrimaryRecordList = (List<PrimaryRecord> list, NcPageInfo? pageInfo);
 
 @riverpod
 class RowNested extends _$RowNested {
+  late String rowId;
+  late NcTableColumn column;
+  late NcTable relation;
+  late bool excluded;
+
   List<PrimaryRecord> _populate(List<Map<String, dynamic>> list) => list
       .map((row) {
         final key = relation.getRefRowIdFromRow(column: column, row: row);
@@ -410,11 +441,17 @@ class RowNested extends _$RowNested {
 
   @override
   Future<PrimaryRecordList> build(
-    String rowId,
-    NcTableColumn column,
-    NcTable relation, {
-    bool excluded = false,
+    String rowIdParam,
+    NcTableColumn columnParam,
+    NcTable relationParam, {
+    bool excludedParam = false,
   }) async {
+    // Store parameters as instance variables for use in methods
+    rowId = rowIdParam;
+    column = columnParam;
+    relation = relationParam;
+    excluded = excludedParam;
+
     final fn = excluded
         ? api.dbTableRowNestedChildrenExcludedList
         : api.dbTableRowNestedList;
@@ -484,12 +521,12 @@ class RowNested extends _$RowNested {
     );
   }
 
-  _invalidate() {
+  void _invalidate() {
     ref
       ..invalidateSelf()
       ..invalidate(dataRowsProvider)
       ..invalidate(
-        rowNestedProvider(rowId, column, relation, excluded: !excluded),
+        rowNestedProvider(rowId, column, relation, excludedParam: !excluded),
       );
   }
 

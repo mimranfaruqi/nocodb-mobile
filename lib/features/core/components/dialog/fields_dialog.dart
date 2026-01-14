@@ -22,7 +22,7 @@ class FieldsDialog extends HookConsumerWidget {
   });
   static const debug = true;
 
-  _debugViewColumns(
+  void _debugViewColumns(
     List<model.NcViewColumn> viewColumns,
     List<model.NcTableColumn> tableColumns,
   ) {

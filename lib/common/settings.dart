@@ -20,7 +20,7 @@ const _kApiToken = 'api_token';
 class _Settings {
   Preferences? prefs;
   bool get initialized => prefs != null;
-  init(Preferences prefs) {
+  void init(Preferences prefs) {
     this.prefs = prefs;
   }
 

@@ -1,0 +1,1 @@
+/Users/mimranfaruqi/IdeaProjects/nocodb-mobile/android/app/property(org.gradle.api.file.Directory, fixed(class org.gradle.api.internal.file.DefaultFilePropertyFactory$FixedDirectory, /Users/mimranfaruqi/IdeaProjects/nocodb-mobile/build))/app/intermediates/cxx/debug/w5y1b6q1/obj/arm64-v8a

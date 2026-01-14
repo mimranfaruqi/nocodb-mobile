@@ -130,7 +130,7 @@ class ChildList extends HookConsumerWidget {
     );
   }
 
-  _build({
+  Widget _build({
     required PrimaryRecordList list,
     required WidgetRef ref,
   }) {

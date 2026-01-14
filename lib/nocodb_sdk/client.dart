@@ -49,11 +49,11 @@ class _HttpClient extends http.BaseClient {
   final http.Client _baseHttpClient;
   final Map<String, String> _headers = {};
 
-  addHeaders(Map<String, String> headers) {
+  void addHeaders(Map<String, String> headers) {
     _headers.addAll(headers);
   }
 
-  removeHeader(String key) {
+  void removeHeader(String key) {
     _headers.remove(key);
   }
 
@@ -93,7 +93,7 @@ class _Api {
   late Uri _baseUri;
   Uri get uri => _baseUri;
 
-  init(String url, {Token? token}) {
+  void init(String url, {Token? token}) {
     _baseUri = Uri.parse(url);
 
     if (token == null) {
@@ -127,7 +127,7 @@ class _Api {
     throw Exception(exception);
   }
 
-  _logResponse(http.Response res) {
+  void _logResponse(http.Response res) {
     logger.finer(
       '<= ${res.request?.method} ${res.request?.url.path} ${res.statusCode} ${res.body}',
     );

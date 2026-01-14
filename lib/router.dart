@@ -28,7 +28,7 @@ part 'router.g.dart';
   return (jsonDecode(header), jsonDecode(payload));
 }
 
-jwtTsToDateTime(int timestamp) =>
+DateTime jwtTsToDateTime(int timestamp) =>
     DateTime.fromMicrosecondsSinceEpoch(timestamp * 1000 * 1000);
 
 (DateTime iat, DateTime exp) getIatAndExpFromPayload(

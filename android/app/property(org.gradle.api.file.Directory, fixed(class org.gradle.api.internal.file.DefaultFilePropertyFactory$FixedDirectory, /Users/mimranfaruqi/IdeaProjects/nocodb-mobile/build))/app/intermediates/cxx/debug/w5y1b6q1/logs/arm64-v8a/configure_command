@@ -1,0 +1,19 @@
+/Users/mimranfaruqi/Library/Android/sdk/cmake/3.22.1/bin/cmake \
+  -H/Users/mimranfaruqi/Library/flutter/packages/flutter_tools/gradle/src/main/scripts \
+  -DCMAKE_SYSTEM_NAME=Android \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DCMAKE_SYSTEM_VERSION=19 \
+  -DANDROID_PLATFORM=android-19 \
+  -DANDROID_ABI=arm64-v8a \
+  -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+  -DANDROID_NDK=/Users/mimranfaruqi/Library/Android/sdk/ndk/28.2.13676358 \
+  -DCMAKE_ANDROID_NDK=/Users/mimranfaruqi/Library/Android/sdk/ndk/28.2.13676358 \
+  -DCMAKE_TOOLCHAIN_FILE=/Users/mimranfaruqi/Library/Android/sdk/ndk/28.2.13676358/build/cmake/android.toolchain.cmake \
+  -DCMAKE_MAKE_PROGRAM=/Users/mimranfaruqi/Library/Android/sdk/cmake/3.22.1/bin/ninja \
+  "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=/Users/mimranfaruqi/IdeaProjects/nocodb-mobile/android/app/property(org.gradle.api.file.Directory, fixed(class org.gradle.api.internal.file.DefaultFilePropertyFactory$FixedDirectory, /Users/mimranfaruqi/IdeaProjects/nocodb-mobile/build))/app/intermediates/cxx/debug/w5y1b6q1/obj/arm64-v8a" \
+  "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=/Users/mimranfaruqi/IdeaProjects/nocodb-mobile/android/app/property(org.gradle.api.file.Directory, fixed(class org.gradle.api.internal.file.DefaultFilePropertyFactory$FixedDirectory, /Users/mimranfaruqi/IdeaProjects/nocodb-mobile/build))/app/intermediates/cxx/debug/w5y1b6q1/obj/arm64-v8a" \
+  "-B/Users/mimranfaruqi/IdeaProjects/nocodb-mobile/android/app/property(org.gradle.api.file.Directory, fixed(class org.gradle.api.internal.file.DefaultFilePropertyFactory$FixedDirectory, /Users/mimranfaruqi/IdeaProjects/nocodb-mobile/build))/.cxx/debug/w5y1b6q1/arm64-v8a" \
+  -GNinja \
+  -Wno-dev \
+  --no-warn-unused-cli \
+  -DCMAKE_BUILD_TYPE=debug

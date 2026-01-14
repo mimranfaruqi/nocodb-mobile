@@ -29,7 +29,7 @@ class Attachments extends _$Attachments {
     return files;
   }
 
-  upload(List<NcFile> files, FnOnUpdate onUpdate) async {
+  Future<void> upload(List<NcFile> files, FnOnUpdate onUpdate) async {
     final newAttachedFiles = await api.dbStorageUpload(files);
     state = [
       ...state,
@@ -38,12 +38,12 @@ class Attachments extends _$Attachments {
     await onUpdate({columnTitle: state});
   }
 
-  delete(String id, FnOnUpdate onUpdate) async {
+  Future<void> delete(String id, FnOnUpdate onUpdate) async {
     state = [...state].where((e) => e.id != id).toList();
     await onUpdate({columnTitle: state});
   }
 
-  rename(String id, String title, FnOnUpdate onUpdate) async {
+  Future<void> rename(String id, String title, FnOnUpdate onUpdate) async {
     state = [...state]
         .map<NcAttachedFile>(
           (e) => e.id == id ? e.copyWith(title: title) : e,

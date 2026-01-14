@@ -24,7 +24,7 @@ class Patterns2 extends _$Patterns2 {
   @override
   Record build() => ([7, 8, 9], [10, 11, 12]);
 
-  update(Record record) {
+  void update(Record record) {
     state = record;
   }
 }
@@ -32,13 +32,13 @@ class Patterns2 extends _$Patterns2 {
 class DebugPage extends HookConsumerWidget {
   const DebugPage({super.key});
 
-  _test(WidgetRef ref) {
+  void _test(WidgetRef ref) {
     // ignore_for_file: unnecessary_cast
     final (a, b) = ref.read(patternsProvider) as Record;
     ref.read(patternsProvider.notifier).state = (a..shuffle(), b..shuffle());
   }
 
-  _test2(WidgetRef ref) {
+  void _test2(WidgetRef ref) {
     final (a, b) = ref.read(patterns2Provider) as Record;
     ref.read(patterns2Provider.notifier).update((a..shuffle(), b..shuffle()));
   }

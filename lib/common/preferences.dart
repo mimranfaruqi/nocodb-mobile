@@ -5,7 +5,7 @@ class Preferences {
   late SharedPreferences _prefs;
   late FlutterSecureStorage _secureStorage;
 
-  load() async {
+  Future<void> load() async {
     _prefs = await SharedPreferences.getInstance();
     const aOptions = AndroidOptions(encryptedSharedPreferences: true);
     _secureStorage = const FlutterSecureStorage(
@@ -13,7 +13,7 @@ class Preferences {
     );
   }
 
-  clear() async {
+  Future<void> clear() async {
     await _prefs.clear();
     await _secureStorage.deleteAll();
   }

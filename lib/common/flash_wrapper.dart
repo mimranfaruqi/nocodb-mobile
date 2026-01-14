@@ -7,7 +7,7 @@ import 'package:nocodb/common/logger.dart';
 const _successDuration = Duration(seconds: 1);
 const _errorDuration = Duration(seconds: 3);
 
-notifySuccess(
+Future<void> notifySuccess(
   BuildContext context, {
   required String message,
 }) async {
@@ -19,7 +19,7 @@ notifySuccess(
 }
 
 // TODO: Change to dialog?
-notifyError(
+Future<void> notifyError(
   BuildContext context,
   dynamic error,
   StackTrace? stackTrace,

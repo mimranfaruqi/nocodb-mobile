@@ -13,39 +13,17 @@ import 'package:nocodb/features/sign_in/pages/sign_in.dart';
 
 part 'routes.g.dart';
 
-@TypedGoRoute<HomeRoute>(
-  path: '/',
-  routes: <TypedGoRoute<GoRouteData>>[
-    TypedGoRoute<ProjectListRoute>(
-      path: 'project_list',
-    ),
-    TypedGoRoute<CloudProjectListRoute>(
-      path: 'cloud_project_list',
-    ),
-    TypedGoRoute<SheetRoute>(
-      path: 'sheet',
-    ),
-    TypedGoRoute<SheetSelectorRoute>(
-      path: 'sheet/selector',
-    ),
-    TypedGoRoute<RowEditorRoute>(
-      path: 'row',
-    ),
-    TypedGoRoute<DebugRoute>(
-      path: 'debug',
-    ),
-    TypedGoRoute<LinkRecordRoute>(
-      path: 'sheet/link_record/:columnId/:rowId',
-    ),
-  ],
-)
-class HomeRoute extends GoRouteData {
+// ✅ HomeRoute - Root route
+@TypedGoRoute<HomeRoute>(path: '/')
+class HomeRoute extends GoRouteData with _$HomeRoute {
   const HomeRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const SignInPage();
 }
 
-class ProjectListRoute extends GoRouteData {
+// ✅ ProjectListRoute - Each route needs its own @TypedGoRoute
+@TypedGoRoute<ProjectListRoute>(path: '/project_list')
+class ProjectListRoute extends GoRouteData with _$ProjectListRoute {
   const ProjectListRoute();
 
   @override
@@ -53,46 +31,58 @@ class ProjectListRoute extends GoRouteData {
       const ProjectListPage();
 }
 
-class CloudProjectListRoute extends GoRouteData {
+// ✅ CloudProjectListRoute
+@TypedGoRoute<CloudProjectListRoute>(path: '/cloud_project_list')
+class CloudProjectListRoute extends GoRouteData with _$CloudProjectListRoute {
   const CloudProjectListRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const CloudProjectListPage();
 }
 
-class SheetRoute extends GoRouteData {
+// ✅ SheetRoute
+@TypedGoRoute<SheetRoute>(path: '/sheet')
+class SheetRoute extends GoRouteData with _$SheetRoute {
   const SheetRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const SheetPage();
 }
 
-class SheetSelectorRoute extends GoRouteData {
+// ✅ SheetSelectorRoute
+@TypedGoRoute<SheetSelectorRoute>(path: '/sheet/selector')
+class SheetSelectorRoute extends GoRouteData with _$SheetSelectorRoute {
   const SheetSelectorRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const SheetSelectorPage();
 }
 
-class RowEditorRoute extends GoRouteData {
+// ✅ RowEditorRoute
+@TypedGoRoute<RowEditorRoute>(path: '/row')
+class RowEditorRoute extends GoRouteData with _$RowEditorRoute {
   const RowEditorRoute({this.id});
   final String? id;
 
   @override
   Widget build(BuildContext context, GoRouterState state) => ProviderScope(
-        overrides: [
-          formProvider.overrideWith((ref) => {}),
-        ],
-        child: RowEditor(rowId_: id),
-      );
+    overrides: [
+      formProvider.overrideWith((ref) => {}),
+    ],
+    child: RowEditor(rowId_: id),
+  );
 }
 
-class DebugRoute extends GoRouteData {
+// ✅ DebugRoute
+@TypedGoRoute<DebugRoute>(path: '/debug')
+class DebugRoute extends GoRouteData with _$DebugRoute {
   const DebugRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const DebugPage();
 }
 
-class LinkRecordRoute extends GoRouteData {
+// ✅ LinkRecordRoute
+@TypedGoRoute<LinkRecordRoute>(path: '/sheet/link_record/:columnId/:rowId')
+class LinkRecordRoute extends GoRouteData with _$LinkRecordRoute {
   const LinkRecordRoute({
     required this.columnId,
     required this.rowId,
@@ -101,7 +91,7 @@ class LinkRecordRoute extends GoRouteData {
   final String rowId;
   @override
   Widget build(BuildContext context, GoRouterState state) => LinkRecordPage(
-        columnId: columnId,
-        rowId: rowId,
-      );
+    columnId: columnId,
+    rowId: rowId,
+  );
 }

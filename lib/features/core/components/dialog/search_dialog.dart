@@ -118,7 +118,7 @@ class SheetSearchDialog extends HookConsumerWidget {
         onChanged: (newColumn) {
           columnName.value = newColumn!;
         },
-        value: columnName.value,
+        initialValue: columnName.value,
       ),
       Row(
         children: [

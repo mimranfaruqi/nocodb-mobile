@@ -1,13 +1,11 @@
 import 'dart:ui';
 
-import 'package:collection/collection.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:nocodb/common/components/scroll_detector.dart';
-import 'package:nocodb/common/extensions.dart';
 import 'package:nocodb/common/flash_wrapper.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/features/core/components/cell.dart';

@@ -57,7 +57,7 @@ class LinkRecordPage extends HookConsumerWidget {
 
   static const debug = true;
 
-  _build({
+  ScrollDetector _build({
     required PrimaryRecordList list,
     required NcTable relation,
     required NcTableColumn column,

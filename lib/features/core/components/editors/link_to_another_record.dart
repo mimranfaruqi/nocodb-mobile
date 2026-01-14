@@ -79,7 +79,7 @@ class LinkToAnotherRecord extends HookConsumerWidget {
     ];
   }
 
-  _buildEmptyCard() => const Card(
+  Card _buildEmptyCard() => const Card(
         elevation: 4,
         child: ListTile(title: Text('No record linked yet.')),
       );

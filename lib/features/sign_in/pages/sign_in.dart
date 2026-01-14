@@ -11,7 +11,7 @@ import 'package:nocodb/routes.dart';
 class SignInPage extends HookConsumerWidget {
   const SignInPage({super.key});
 
-  _build1(BuildContext context, WidgetRef ref) {
+  Container _build1(BuildContext context, WidgetRef ref) {
     final hostController = useTextEditingController();
     final usernameController = useTextEditingController();
     final passwordController = useTextEditingController();
