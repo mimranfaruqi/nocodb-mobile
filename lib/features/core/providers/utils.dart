@@ -23,6 +23,13 @@ class ProviderContainerWrapper extends ProviderReader {
   T read<T>(Object provider) => c.read(provider as dynamic);
 }
 
+class RefWrapper extends ProviderReader {
+  RefWrapper(this.ref);
+  final Ref ref;
+  @override
+  T read<T>(Object provider) => ref.read(provider as dynamic);
+}
+
 FutureOr<T> errorAdapter<T>(Object error, StackTrace? stackTrace) {
   if (stackTrace != null) {
     Error.throwWithStackTrace(error, stackTrace);
@@ -61,6 +68,10 @@ Future<void> selectView(WidgetRef ref, NcView view) async {
 
 Future<void> selectProject2(ProviderContainer c, NcProject project) async {
   await _selectProject(ProviderContainerWrapper(c), project);
+}
+
+Future<void> selectProjectFromRef(Ref ref, NcProject project) async {
+  await _selectProject(RefWrapper(ref), project);
 }
 
 Future<void> selectTable2(ProviderContainer c, NcTable table) async {

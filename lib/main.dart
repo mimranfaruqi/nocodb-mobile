@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -9,10 +10,12 @@ const useMaterial3 = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FlutterDownloader.initialize(
-    debug: true,
-    ignoreSsl: true,
-  );
+  if (!kIsWeb) {
+    await FlutterDownloader.initialize(
+      debug: true,
+      ignoreSsl: true,
+    );
+  }
   // https://api.flutter.dev/flutter/foundation/FlutterError/demangleStackTrace.html
   FlutterError.demangleStackTrace = (stack) {
     // Trace and Chain are classes in package:stack_trace

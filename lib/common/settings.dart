@@ -5,9 +5,15 @@ import 'package:nocodb/nocodb_sdk/client.dart';
 final settings = _Settings();
 
 class Settings {
-  Settings({required this.host, required this.token, this.username});
+  Settings({
+    required this.host,
+    required this.token,
+    this.username,
+    this.baseId,
+  });
 
   final String? username;
+  final String? baseId;
   final String host;
   final Token token;
 }
@@ -16,6 +22,7 @@ const _kUsername = 'username';
 const _kHost = 'host';
 const _kAuthToken = 'auth_token';
 const _kApiToken = 'api_token';
+const _kBaseId = 'base_id';
 
 class _Settings {
   Preferences? prefs;
@@ -28,11 +35,15 @@ class _Settings {
     required String host,
     required Token token,
     String? username,
+    String? baseId,
   }) async {
     await clear();
     await prefs?.set(key: _kHost, value: host);
     if (username != null) {
       await prefs?.set(key: _kUsername, value: username);
+    }
+    if (baseId != null && baseId.isNotEmpty) {
+      await prefs?.set(key: _kBaseId, value: baseId);
     }
 
     switch (token) {
@@ -52,10 +63,12 @@ class _Settings {
     }
 
     final username = await prefs?.get<String>(key: _kUsername);
+    final baseId = await prefs?.get<String>(key: _kBaseId);
     final authToken = await prefs?.getSecure(key: _kAuthToken);
     if (authToken != null) {
       return Settings(
         username: username,
+        baseId: baseId,
         host: host,
         token: AuthToken(authToken),
       );
@@ -65,6 +78,7 @@ class _Settings {
     if (apiToken != null) {
       return Settings(
         username: username,
+        baseId: baseId,
         host: host,
         token: ApiToken(apiToken),
       );

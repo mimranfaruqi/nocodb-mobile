@@ -7,6 +7,7 @@ import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/nocodb_sdk/utils.dart';
+import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/routes.dart';
 
 class SignInPage extends HookConsumerWidget {
@@ -14,6 +15,7 @@ class SignInPage extends HookConsumerWidget {
 
   _build1(BuildContext context, WidgetRef ref) {
     final hostController = useTextEditingController();
+    final baseIdController = useTextEditingController();
     final usernameController = useTextEditingController();
     final passwordController = useTextEditingController();
     final apiTokenController = useTextEditingController();
@@ -33,19 +35,16 @@ class SignInPage extends HookConsumerWidget {
           final s = await settings.get();
           rememberMe.value = true;
 
-          // TODO: check if an Android emulator is being used.
-          // if (kDebugMode && Platform.isAndroid) {
-          //   hostController.text = 'http://10.0.2.2:8080';
-          // } else {
-          //   hostController.text = 'https://app.nocodb.com';
-          // }
-          hostController.text = 'https://app.nocodb.com';
+          hostController.text = 'https://nocodb.faruqi.dev';
 
           if (s == null) {
             return null;
           }
           if (s.host.isNotEmpty) {
             hostController.text = s.host;
+          }
+          if (s.baseId != null && s.baseId!.isNotEmpty) {
+            baseIdController.text = s.baseId!;
           }
 
           if (s.username != null) {
@@ -92,10 +91,32 @@ class SignInPage extends HookConsumerWidget {
               api.init(host, token: token);
 
               if (rememberMe.value) {
-                await settings.save(host: host, token: token!);
+                await settings.save(
+                  host: host,
+                  token: token!,
+                  username: usernameController.text,
+                  baseId: baseIdController.text,
+                );
               }
 
               if (!context.mounted) {
+                return;
+              }
+
+              final baseId = baseIdController.text;
+              if (baseId.isNotEmpty) {
+                await selectProject(
+                  ref,
+                  NcProject(
+                    id: baseId,
+                    baseId: baseId,
+                    title: baseId,
+                  ),
+                );
+                if (!context.mounted) {
+                  return;
+                }
+                const SheetRoute().go(context);
                 return;
               }
 
@@ -111,6 +132,7 @@ class SignInPage extends HookConsumerWidget {
 
     // NOTE: There might be a more elegant way to implement this.
     hostController.addListener(setOnPressed);
+    baseIdController.addListener(setOnPressed);
     usernameController.addListener(setOnPressed);
     passwordController.addListener(setOnPressed);
     apiTokenController.addListener(setOnPressed);
@@ -127,6 +149,12 @@ class SignInPage extends HookConsumerWidget {
               controller: hostController,
               decoration: const InputDecoration(
                 labelText: 'Host',
+              ),
+            ),
+            TextField(
+              controller: baseIdController,
+              decoration: const InputDecoration(
+                labelText: 'Base ID (optional)',
               ),
             ),
             Container(height: 16),

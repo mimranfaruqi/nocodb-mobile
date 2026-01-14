@@ -5,10 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/common/preferences.dart';
 import 'package:nocodb/common/settings.dart';
+import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
+import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/nocodb_sdk/utils.dart';
 import 'package:nocodb/routes.dart';
-import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'router.g.dart';
@@ -52,6 +53,7 @@ bool isAuthTokenAlive(String authToken) {
 }
 
 FutureOr<String?> redirect(
+  Ref ref,
   BuildContext context,
   GoRouterState state,
 ) async {
@@ -68,7 +70,7 @@ FutureOr<String?> redirect(
       await settings.clear();
       return const HomeRoute().location;
     }
-    final Settings(:host, :token) = s;
+    final Settings(:host, :token, :baseId) = s;
 
     logger
       ..config('host: $host')
@@ -80,6 +82,18 @@ FutureOr<String?> redirect(
       }
 
       api.init(host, token: token);
+      if (baseId != null && baseId.isNotEmpty) {
+        await selectProjectFromRef(
+          ref,
+          NcProject(
+            id: baseId,
+            baseId: baseId,
+            title: baseId,
+          ),
+        );
+        return const SheetRoute().location;
+      }
+
       // TODO: Verify the validity of the credentials by calling an appropriate API.
       if (isCloud(host)) {
         return const CloudProjectListRoute().location;
@@ -102,7 +116,7 @@ GoRouter router(Ref ref) => GoRouter(
       routes: $appRoutes,
       debugLogDiagnostics: true,
       redirect: (context, state) async {
-        final location = await redirect(context, state);
+        final location = await redirect(ref, context, state);
         if (location != null) {
           logger.info('redirected to $location');
         }
