@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
+import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/routes.dart';
@@ -113,17 +114,17 @@ class AppNavigationDrawer extends StatelessWidget {
                                 );
                                 await fullTableResult.when(
                                   ok: (fullTable) async {
-                                    // Set the table and get first view
-                                    ref.read(tableProvider.notifier).state =
-                                        fullTable;
+                                    // Use selectTable to properly update all providers
+                                    await selectTable(ref, fullTable);
 
                                     final viewData = ref.read(
                                       viewListProvider(table.id),
                                     );
                                     await viewData.whenData((views) {
                                       if (views.list.isNotEmpty) {
-                                        ref.read(viewProvider.notifier).state =
-                                            views.list.first;
+                                        ref
+                                            .read(viewProvider.notifier)
+                                            .set(views.list.first);
                                       }
                                     });
 
@@ -173,42 +174,11 @@ class AppNavigationDrawer extends StatelessWidget {
                                           ),
                                           selected: isViewSelected,
                                           onTap: () async {
-                                            // When selecting a view, fetch full table and set both
-                                            final fullTableResult = await api
-                                                .dbTableRead(tableId: table.id);
-                                            await fullTableResult.when(
-                                              ok: (fullTable) async {
-                                                ref
-                                                        .read(
-                                                          tableProvider
-                                                              .notifier,
-                                                        )
-                                                        .state =
-                                                    fullTable;
-                                                ref
-                                                        .read(
-                                                          viewProvider.notifier,
-                                                        )
-                                                        .state =
-                                                    view;
-                                                if (context.mounted) {
-                                                  Navigator.pop(context);
-                                                }
-                                              },
-                                              ng: (error, stackTrace) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Error: $error',
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                            );
+                                            // When selecting a view, use selectView to properly update all providers
+                                            await selectView(ref, view);
+                                            if (context.mounted) {
+                                              Navigator.pop(context);
+                                            }
                                           },
                                         ),
                                       );

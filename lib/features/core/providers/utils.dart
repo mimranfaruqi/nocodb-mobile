@@ -125,7 +125,7 @@ Future<void> _selectView(ProviderReader reader, NcView view) async {
     return;
   }
   if (table.id != view.fkModelId) {
-    final newTable = await unwrap(await api.dbTableRead(tableId: table.id));
+    final newTable = await unwrap(await api.dbTableRead(tableId: view.fkModelId));
     await _selectTable(reader, newTable);
   }
 }

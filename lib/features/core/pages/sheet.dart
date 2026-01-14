@@ -30,8 +30,8 @@ class SheetPage extends HookConsumerWidget {
         body: const ViewSwitcher(),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            final table = ref.watch(tableProvider);
-            final currentView = ref.watch(viewProvider);
+            final table = ref.read(tableProvider);
+            final currentView = ref.read(viewProvider);
             if (table == null || currentView == null) {
               return;
             }

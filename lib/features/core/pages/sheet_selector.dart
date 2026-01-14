@@ -100,6 +100,13 @@ class SheetSelectorPage extends HookConsumerWidget {
       length: tables.length,
       child: Scaffold(
         appBar: AppBar(
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
           title: Text(project.title),
           bottom: TabBar(
             onTap: (index) {
@@ -136,6 +143,13 @@ class SheetSelectorPage extends HookConsumerWidget {
           controller: pageController,
           itemBuilder: _viewBuilder(ref: ref, tables: tables),
         ),
+        floatingActionButton: Builder(
+          builder: (context) => FloatingActionButton(
+            onPressed: () => Scaffold.of(context).openDrawer(),
+            child: const Icon(Icons.list),
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
         drawer: _buildDrawer(
           tables: tables,
           tableId: tableId,
