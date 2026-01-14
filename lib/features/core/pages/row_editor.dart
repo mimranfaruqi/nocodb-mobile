@@ -26,19 +26,17 @@ Widget _buildTitle({
   final relatedModel = tables.getRelation(column.fkRelatedModelId ?? '');
   final description =
       column.uidt == UITypes.linkToAnotherRecord && relatedModel != null
-          ? column.getRelationDescription(
-              modelTitle: tables.table.title,
-              relatedModelTitle: relatedModel.title,
-            )
-          : column.uidt.value;
+      ? column.getRelationDescription(
+          modelTitle: tables.table.title,
+          relatedModelTitle: relatedModel.title,
+        )
+      : column.uidt.value;
 
   return ListTile(
     tileColor: Colors.grey.shade200,
     horizontalTitleGap: 0,
     minVerticalPadding: 0,
-    title: Text(
-      '${column.title} $required',
-    ),
+    title: Text('${column.title} $required'),
     subtitle: Text('$description'),
     trailing: column.uidt == UITypes.linkToAnotherRecord
         ? IconButton(
@@ -55,8 +53,10 @@ Widget _buildTitle({
                   ),
                 );
               } else {
-                await LinkRecordRoute(columnId: column.id, rowId: rowId)
-                    .push(context);
+                await LinkRecordRoute(
+                  columnId: column.id,
+                  rowId: rowId,
+                ).push(context);
               }
             },
           )
@@ -65,17 +65,13 @@ Widget _buildTitle({
 }
 
 class RowEditor extends HookConsumerWidget {
-  const RowEditor({
-    super.key,
-    this.rowId_,
-  });
+  const RowEditor({super.key, this.rowId_});
   final String? rowId_;
 
   int _getViewColumnOrder(
     NcTableColumn tableColumn,
     List<NcViewColumn> viewColumns,
-  ) =>
-      tableColumn.toViewColumn(viewColumns)?.order ?? 0;
+  ) => tableColumn.toViewColumn(viewColumns)?.order ?? 0;
 
   List<Widget> _buildForm({
     required model.NcView view,
@@ -86,10 +82,8 @@ class RowEditor extends HookConsumerWidget {
   }) {
     final rows = ref.watch(dataRowsProvider).valueOrNull?.list ?? [];
     final table = ref.watch(tableProvider);
-    final rowData = rows.firstWhereOrNull(
-          (row) => table?.getPkFromRow(row) == rowId,
-        ) ??
-        {};
+    final rowData =
+        rows.firstWhereOrNull((row) => table?.getPkFromRow(row) == rowId) ?? {};
 
     final viewColumns = ref.watch(viewColumnListProvider(view.id)).valueOrNull;
     assert(viewColumns != null);
@@ -103,15 +97,18 @@ class RowEditor extends HookConsumerWidget {
     // The required columns should be displayed at the top.
     final rqds = filtered.where((c) => c.rqd).toList()
       ..sort(
-        (a, b) => _getViewColumnOrder(a, viewColumns).compareTo(
-          _getViewColumnOrder(b, viewColumns),
-        ),
+        (a, b) => _getViewColumnOrder(
+          a,
+          viewColumns,
+        ).compareTo(_getViewColumnOrder(b, viewColumns)),
       );
 
     final optionals = filtered.where((c) => !c.rqd).toList()
       ..sort(
-        (a, b) => _getViewColumnOrder(a, viewColumns)
-            .compareTo(_getViewColumnOrder(b, viewColumns)),
+        (a, b) => _getViewColumnOrder(
+          a,
+          viewColumns,
+        ).compareTo(_getViewColumnOrder(b, viewColumns)),
       );
 
     return [...rqds, ...optionals].map((c) {
@@ -119,24 +116,10 @@ class RowEditor extends HookConsumerWidget {
 
       return Column(
         children: [
-          _buildTitle(
-            tables: tables,
-            column: c,
-            rowId: rowId,
-          ),
-          const Divider(
-            color: Colors.grey,
-            height: 1,
-          ),
-          Editor(
-            column: c,
-            value: initialValue,
-            rowId: rowId,
-          ),
-          const Divider(
-            color: Colors.grey,
-            height: 1,
-          ),
+          _buildTitle(tables: tables, column: c, rowId: rowId),
+          const Divider(color: Colors.grey, height: 1),
+          Editor(column: c, value: initialValue, rowId: rowId),
+          const Divider(color: Colors.grey, height: 1),
         ],
       );
     }).toList();
@@ -147,49 +130,41 @@ class RowEditor extends HookConsumerWidget {
     required BuildContext context,
     required WidgetRef ref,
     required ValueNotifier<String?> rowId,
-  }) =>
-      IconButton(
-        onPressed: () async {
-          await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Delete'),
-              content: const Text(
-                'Are you sure want to delete this record?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    await ref
-                        .watch(dataRowsProvider.notifier)
-                        .deleteRow(rowId: rowId.value!)
-                        .then((_) {
+  }) => IconButton(
+    onPressed: () async {
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Delete'),
+          content: const Text('Are you sure want to delete this record?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await ref
+                    .watch(dataRowsProvider.notifier)
+                    .deleteRow(rowId: rowId.value!)
+                    .then((_) {
                       int count = 0;
                       Navigator.popUntil(context, (_) => 2 <= count++);
-                    }).onError(
-                      (error, stackTrace) => notifyError(
-                        context,
-                        error,
-                        stackTrace,
-                      ),
-                    );
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
+                    })
+                    .onError((error, stackTrace) {
+                      notifyError(context, error, stackTrace);
+                    });
+              },
+              child: const Text('OK'),
             ),
-          );
-        },
-        icon: const Icon(
-          Icons.delete,
+          ],
         ),
       );
+    },
+    icon: const Icon(Icons.delete),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -219,13 +194,17 @@ class RowEditor extends HookConsumerWidget {
 
         if (isReadyToSave) {
           // TODO: This should be passed to Editor as a callback of onUpdate,
-          await ref.read(dataRowsProvider.notifier).createRow(next).then((row) {
-            notifySuccess(context, message: 'Saved');
-            final pk = tables.table.getPkFromRow(row);
-            rowId.value = pk;
-          }).onError(
-            (error, stackTrace) => notifyError(context, error, stackTrace),
-          );
+          await ref
+              .read(dataRowsProvider.notifier)
+              .createRow(next)
+              .then((row) {
+                notifySuccess(context, message: 'Saved');
+                final pk = tables.table.getPkFromRow(row);
+                rowId.value = pk;
+              })
+              .onError((error, stackTrace) {
+                notifyError(context, error, stackTrace);
+              });
         }
       });
 

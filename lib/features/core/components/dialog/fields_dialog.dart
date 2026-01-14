@@ -17,12 +17,10 @@ model.NcTableColumn getTableColumn(
     tableColumns.first;
 
 class FieldsDialog extends HookConsumerWidget {
-  const FieldsDialog({
-    super.key,
-  });
+  const FieldsDialog({super.key});
   static const debug = true;
 
-  _debugViewColumns(
+  void _debugViewColumns(
     List<model.NcViewColumn> viewColumns,
     List<model.NcTableColumn> tableColumns,
   ) {
@@ -53,55 +51,43 @@ class FieldsDialog extends HookConsumerWidget {
       final tableColumn = getTableColumn(viewColumn, table.columns);
 
       return view.showSystemFields ? true : !tableColumn.isSystem;
-    }).toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+    }).toList()..sort((a, b) => a.order.compareTo(b.order));
 
-    final List<Widget> children = filteredViewColumns.map(
-      (viewColumn) {
-        final column = getTableColumn(viewColumn, table.columns);
-        return CheckboxListTile(
-          controlAffinity: ListTileControlAffinity.leading,
-          key: Key(viewColumn.id),
-          title: Text(column.title),
-          value: viewColumn.show,
-          onChanged: (value) async {
-            if (column.pv) {
-              await showDialog(
-                context: context,
-                builder: (_) => AlertDialog(
-                  title: Text('${column.title} is display value'),
-                  content: const Text('You cannot hide display value.'),
-                  actions: [
-                    TextButton(
-                      child: const Text('OK'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                ),
-              );
-            }
-            // TODO: The following logic should be integrated to provider.
-            await api
-                .dbViewColumnUpdateShow(
-                  column: viewColumn,
-                  show: value == true,
-                )
-                .then(
-                  (_) => ref.invalidate(viewColumnListProvider),
-                )
-                .onError(
-                  (error, stackTrace) => notifyError(
-                    context,
-                    error,
-                    stackTrace,
+    final List<Widget> children = filteredViewColumns.map((viewColumn) {
+      final column = getTableColumn(viewColumn, table.columns);
+      return CheckboxListTile(
+        controlAffinity: ListTileControlAffinity.leading,
+        key: Key(viewColumn.id),
+        title: Text(column.title),
+        value: viewColumn.show,
+        onChanged: (value) async {
+          if (column.pv) {
+            await showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: Text('${column.title} is display value'),
+                content: const Text('You cannot hide display value.'),
+                actions: [
+                  TextButton(
+                    child: const Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                );
-          },
-        );
-      },
-    ).toList();
+                ],
+              ),
+            );
+          }
+          // TODO: The following logic should be integrated to provider.
+          await api
+              .dbViewColumnUpdateShow(column: viewColumn, show: value == true)
+              .then((_) => ref.invalidate(viewColumnListProvider))
+              .onError(
+                (error, stackTrace) => notifyError(context, error, stackTrace),
+              );
+        },
+      );
+    }).toList();
 
     logger.info('show_system_fields: ${view.showSystemFields}');
 
@@ -149,9 +135,7 @@ class FieldsDialog extends HookConsumerWidget {
               ),
             ),
           ),
-          const Divider(
-            thickness: 2,
-          ),
+          const Divider(thickness: 2),
           InkWell(
             onTap: () {
               ref.read(viewProvider.notifier).showSystemFields();
@@ -167,9 +151,7 @@ class FieldsDialog extends HookConsumerWidget {
                 ),
                 const Text(
                   'Show system fields',
-                  style: TextStyle(
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(fontSize: 14),
                 ),
               ],
             ),

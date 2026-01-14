@@ -27,7 +27,7 @@ const _kBaseId = 'base_id';
 class _Settings {
   Preferences? prefs;
   bool get initialized => prefs != null;
-  init(Preferences prefs) {
+  void init(Preferences prefs) {
     this.prefs = prefs;
   }
 

@@ -23,27 +23,19 @@ class _SearchDialog extends HookConsumerWidget {
     final isActive = useState(false);
     final controller = useTextEditingController();
 
-    useEffect(
-      () {
-        controller.text = initialValue;
-        return null;
-      },
-      [],
-    );
+    useEffect(() {
+      controller.text = initialValue;
+      return null;
+    }, []);
     return AlertDialog(
-      title: const Text(
-        'Search',
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: const Text('Search', overflow: TextOverflow.ellipsis),
       content: IntrinsicHeight(
         child: Column(
           children: [
             ...children,
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Keyword',
-              ),
+              decoration: const InputDecoration(labelText: 'Keyword'),
               onChanged: (value) {
                 isActive.value = value.isNotEmpty;
               },
@@ -71,9 +63,7 @@ class _SearchDialog extends HookConsumerWidget {
 }
 
 class SheetSearchDialog extends HookConsumerWidget {
-  const SheetSearchDialog({
-    super.key,
-  });
+  const SheetSearchDialog({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,10 +77,8 @@ class SheetSearchDialog extends HookConsumerWidget {
     final columns = table.columns;
     final items = columns
         .map(
-          (column) => DropdownMenuItem(
-            value: column.title,
-            child: Text(column.title),
-          ),
+          (column) =>
+              DropdownMenuItem(value: column.title, child: Text(column.title)),
         )
         .toList();
 
@@ -100,31 +88,24 @@ class SheetSearchDialog extends HookConsumerWidget {
     final operator = useState(QueryOperator.eq);
     final columnName = useState<String?>(null);
 
-    useEffect(
-      () {
-        operator.value = query?.operator ?? QueryOperator.eq;
-        columnName.value = query?.columnName ?? columns.first.title;
-        return null;
-      },
-      [query],
-    );
+    useEffect(() {
+      operator.value = query?.operator ?? QueryOperator.eq;
+      columnName.value = query?.columnName ?? columns.first.title;
+      return null;
+    }, [query]);
 
     final children = [
       DropdownButtonFormField(
-        decoration: const InputDecoration(
-          labelText: 'Field',
-        ),
+        decoration: const InputDecoration(labelText: 'Field'),
         items: items,
         onChanged: (newColumn) {
           columnName.value = newColumn!;
         },
-        value: columnName.value,
+        initialValue: columnName.value,
       ),
       Row(
         children: [
-          const Expanded(
-            child: Text('Operator'),
-          ),
+          const Expanded(child: Text('Operator')),
           DropdownButton<QueryOperator>(
             items: QueryOperator.values
                 .map(
@@ -179,20 +160,15 @@ class LinkRecordSearchDialog extends HookConsumerWidget {
     final query = ref.read(rowNestedWhereProvider(column));
     final operator = useState(QueryOperator.eq);
 
-    useEffect(
-      () {
-        operator.value = query?.$2 ?? QueryOperator.eq;
-        return null;
-      },
-      [query],
-    );
+    useEffect(() {
+      operator.value = query?.$2 ?? QueryOperator.eq;
+      return null;
+    }, [query]);
 
     final children = [
       Row(
         children: [
-          Expanded(
-            child: Text(pvName),
-          ),
+          Expanded(child: Text(pvName)),
           DropdownButton<QueryOperator>(
             items: QueryOperator.values
                 .map(
@@ -213,8 +189,9 @@ class LinkRecordSearchDialog extends HookConsumerWidget {
     }
 
     onSearch(String query) {
-      ref.read(rowNestedWhereProvider(column).notifier).state =
-          query.isEmpty ? null : (pvName, operator.value, query);
+      ref.read(rowNestedWhereProvider(column).notifier).state = query.isEmpty
+          ? null
+          : (pvName, operator.value, query);
       Navigator.pop(context);
     }
 

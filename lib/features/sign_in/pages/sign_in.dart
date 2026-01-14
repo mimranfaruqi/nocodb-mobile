@@ -13,7 +13,7 @@ import 'package:nocodb/routes.dart';
 class SignInPage extends HookConsumerWidget {
   const SignInPage({super.key});
 
-  _build1(BuildContext context, WidgetRef ref) {
+  Container _build1(BuildContext context, WidgetRef ref) {
     final hostController = useTextEditingController();
     final baseIdController = useTextEditingController();
     final usernameController = useTextEditingController();
@@ -28,33 +28,30 @@ class SignInPage extends HookConsumerWidget {
     // Disable username and password field when API token is entered.
     final useApiToken = useState(false);
 
-    useEffect(
-      () {
-        // ignore: discarded_futures
-        () async {
-          final s = await settings.get();
-          rememberMe.value = true;
+    useEffect(() {
+      // ignore: discarded_futures
+      () async {
+        final s = await settings.get();
+        rememberMe.value = true;
 
-          hostController.text = 'https://nocodb.faruqi.dev';
+        hostController.text = 'https://nocodb.faruqi.dev';
 
-          if (s == null) {
-            return null;
-          }
-          if (s.host.isNotEmpty) {
-            hostController.text = s.host;
-          }
-          if (s.baseId != null && s.baseId!.isNotEmpty) {
-            baseIdController.text = s.baseId!;
-          }
+        if (s == null) {
+          return null;
+        }
+        if (s.host.isNotEmpty) {
+          hostController.text = s.host;
+        }
+        if (s.baseId != null && s.baseId!.isNotEmpty) {
+          baseIdController.text = s.baseId!;
+        }
 
-          if (s.username != null) {
-            usernameController.text = s.username!;
-          }
-        }();
-        return null;
-      },
-      [],
-    );
+        if (s.username != null) {
+          usernameController.text = s.username!;
+        }
+      }();
+      return null;
+    }, []);
     final onPressed = useState<Future<Null> Function()?>(null);
 
     isActive() =>
@@ -74,8 +71,7 @@ class SignInPage extends HookConsumerWidget {
                 (await api.authSignin(
                   usernameController.text,
                   passwordController.text,
-                ))
-                    .when(
+                )).when(
                   ok: (value) {
                     token = AuthToken(value);
                   },
@@ -103,27 +99,12 @@ class SignInPage extends HookConsumerWidget {
                 return;
               }
 
-              final baseId = baseIdController.text;
-              if (baseId.isNotEmpty) {
-                await selectProject(
-                  ref,
-                  NcProject(
-                    id: baseId,
-                    baseId: baseId,
-                    title: baseId,
-                  ),
-                );
-                if (!context.mounted) {
-                  return;
-                }
-                const SheetRoute().go(context);
-                return;
-              }
-
+              // Always go to project list after login, never directly to a sheet
+              // This ensures proper initialization of all providers
               if (isCloud(host)) {
-                const CloudProjectListRoute().go(context);
+                const CloudProjectListRoute().replace(context);
               } else {
-                const ProjectListRoute().go(context);
+                const ProjectListRoute().replace(context);
               }
             }
           : null;
@@ -143,13 +124,9 @@ class SignInPage extends HookConsumerWidget {
         child: Column(
           children: [
             TextField(
-              autofillHints: const [
-                AutofillHints.url,
-              ],
+              autofillHints: const [AutofillHints.url],
               controller: hostController,
-              decoration: const InputDecoration(
-                labelText: 'Host',
-              ),
+              decoration: const InputDecoration(labelText: 'Host'),
             ),
             TextField(
               controller: baseIdController,
@@ -165,15 +142,11 @@ class SignInPage extends HookConsumerWidget {
                 AutofillHints.username,
               ],
               controller: usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-              ),
+              decoration: const InputDecoration(labelText: 'Username'),
             ),
             TextField(
               enabled: !useApiToken.value,
-              autofillHints: const [
-                AutofillHints.password,
-              ],
+              autofillHints: const [AutofillHints.password],
               controller: passwordController,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -238,9 +211,7 @@ class SignInPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-        appBar: AppBar(
-          title: const Text('NocoDB'),
-        ),
-        body: _build1(context, ref),
-      );
+    appBar: AppBar(title: const Text('NocoDB')),
+    body: _build1(context, ref),
+  );
 }

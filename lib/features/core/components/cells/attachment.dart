@@ -28,9 +28,7 @@ class Attachment extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final files = (initialValue ?? [])
-        .map<NcAttachedFile>(
-          (c) => NcAttachedFile.fromJson(c),
-        )
+        .map<NcAttachedFile>((c) => NcAttachedFile.fromJson(c))
         .toList();
     return ListView(
       scrollDirection: Axis.horizontal,

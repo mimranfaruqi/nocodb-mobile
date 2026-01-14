@@ -28,20 +28,19 @@ class LinkToAnotherRecord extends HookConsumerWidget {
     required String value,
     required String refRowId,
     required WidgetRef ref,
-  }) =>
-      Card(
-        elevation: 4,
-        child: ListTile(
-          title: Text(value),
-          subtitle: Text('key: $refRowId'),
-          trailing: UnlinkIconButton(
-            rowId: rowId,
-            column: column,
-            relation: relation,
-            refRowId: refRowId,
-          ),
-        ),
-      );
+  }) => Card(
+    elevation: 4,
+    child: ListTile(
+      title: Text(value),
+      subtitle: Text('key: $refRowId'),
+      trailing: UnlinkIconButton(
+        rowId: rowId,
+        column: column,
+        relation: relation,
+        refRowId: refRowId,
+      ),
+    ),
+  );
 
   List<Widget> _buildChildren({
     required PrimaryRecordList list,
@@ -59,9 +58,7 @@ class LinkToAnotherRecord extends HookConsumerWidget {
         Card(
           elevation: 4,
           child: ListTile(
-            title: const Text(
-              'See more linked records.',
-            ),
+            title: const Text('See more linked records.'),
             leading: const Icon(Icons.open_in_new),
             onTap: () async {
               await showModalBottomSheet(
@@ -79,10 +76,10 @@ class LinkToAnotherRecord extends HookConsumerWidget {
     ];
   }
 
-  _buildEmptyCard() => const Card(
-        elevation: 4,
-        child: ListTile(title: Text('No record linked yet.')),
-      );
+  Card _buildEmptyCard() => const Card(
+    elevation: 4,
+    child: ListTile(title: Text('No record linked yet.')),
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -92,13 +89,7 @@ class LinkToAnotherRecord extends HookConsumerWidget {
       return _buildEmptyCard();
     }
     final child = ref
-        .watch(
-          rowNestedProvider(
-            rowId,
-            column,
-            relation,
-          ),
-        )
+        .watch(rowNestedProvider(rowId, column, relation))
         .when(
           data: (list) => list.$1.isEmpty
               ? _buildEmptyCard()
@@ -112,9 +103,7 @@ class LinkToAnotherRecord extends HookConsumerWidget {
         );
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 300),
-      child: Scrollbar(
-        child: child,
-      ),
+      child: Scrollbar(child: child),
     );
   }
 }

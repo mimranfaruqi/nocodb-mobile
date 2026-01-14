@@ -27,9 +27,7 @@ final isLoadedProvider = Provider<bool>((ref) {
       tables != null;
 });
 
-Future<Map<String, NcTable>> getRelations(
-  NcTable table,
-) async {
+Future<Map<String, NcTable>> getRelations(NcTable table) async {
   final relations = <String, NcTable>{};
 
   await Future.wait(
@@ -37,9 +35,7 @@ Future<Map<String, NcTable>> getRelations(
       await serialize(
         await api.dbTableRead(tableId: fk),
         fn: (result) {
-          logger.info(
-            'fetched relation. ${table.title}->${result.title}',
-          );
+          logger.info('fetched relation. ${table.title}->${result.title}');
           relations[fk] = result;
         },
       );
@@ -60,9 +56,7 @@ class View extends _$View {
     serialize(
       await api.dbViewUpdate(
         viewId: state!.id,
-        data: {
-          'show_system_fields': !state!.showSystemFields,
-        },
+        data: {'show_system_fields': !state!.showSystemFields},
       ),
       fn: (ok) => state = ok,
     );
@@ -73,14 +67,14 @@ class View extends _$View {
 
 @riverpod
 Future<NcWorkspaceList> workspaceList(Ref ref) async => serialize(
-      await api.workspaceList(),
-      fn: (ok) {
-        if (ref.read(workspaceProvider) == null) {
-          ref.read(workspaceProvider.notifier).state = ok.list.firstOrNull;
-        }
-        return ok;
-      },
-    );
+  await api.workspaceList(),
+  fn: (ok) {
+    if (ref.read(workspaceProvider) == null) {
+      ref.read(workspaceProvider.notifier).state = ok.list.firstOrNull;
+    }
+    return ok;
+  },
+);
 
 @riverpod
 Future<NcProjectList> baseList(Ref ref, String workspaceId) async =>
@@ -91,10 +85,7 @@ Future<NcProjectList> projectList(Ref ref) async =>
     unwrap(await api.projectList());
 
 @Riverpod(keepAlive: true)
-Future<NcSimpleTableList> tableList(
-  Ref ref,
-  String projectId,
-) async =>
+Future<NcSimpleTableList> tableList(Ref ref, String projectId) async =>
     unwrap(await api.dbTableList(projectId: projectId));
 
 @Riverpod(keepAlive: true)
@@ -102,10 +93,7 @@ Future<ViewList> viewList(Ref ref, String tableId) async =>
     unwrap(await api.dbViewList(tableId: tableId));
 
 @Riverpod(keepAlive: true)
-Future<List<NcViewColumn>> viewColumnList(
-  Ref ref,
-  String viewId,
-) async =>
+Future<List<NcViewColumn>> viewColumnList(Ref ref, String viewId) async =>
     unwrap(await api.dbViewColumnList(viewId: viewId));
 
 @Riverpod()
@@ -119,15 +107,13 @@ class Fields extends _$Fields {
       return [];
     }
 
-    return ref
-        .watch(viewColumnListProvider(view.id).future)
-        .then((viewColumns) {
+    return ref.watch(viewColumnListProvider(view.id).future).then((
+      viewColumns,
+    ) {
       final fields = viewColumns.getColumnsToShow(table, view)
         ..sort((a, b) => a.order.compareTo(b.order));
       return fields
-          .map(
-            (columns) => columns.toTableColumn(table.columns),
-          )
+          .map((columns) => columns.toTableColumn(table.columns))
           .whereNotNull()
           .toList();
     });
@@ -148,8 +134,9 @@ class SearchQuery {
   String toString() => '($columnName,$operator,$query)';
 }
 
-final searchQueryFamily =
-    StateProviderFamily<SearchQuery?, NcView>((ref, view) => null);
+final searchQueryFamily = StateProviderFamily<SearchQuery?, NcView>(
+  (ref, view) => null,
+);
 
 @riverpod
 class DataRows extends _$DataRows {
@@ -217,10 +204,7 @@ class DataRows extends _$DataRows {
     logger.info('searchQuery: $searchQuery');
 
     return serialize(
-      await api.dbViewRowList(
-        view: view,
-        where: searchQuery,
-      ),
+      await api.dbViewRowList(view: view, where: searchQuery),
       fn: (result) => populate(result, table, tables.relationMap),
     );
   }
@@ -267,15 +251,10 @@ class DataRows extends _$DataRows {
     );
   }
 
-  Future<void> deleteRow({
-    required String rowId,
-  }) async {
+  Future<void> deleteRow({required String rowId}) async {
     state = const AsyncValue.loading();
     final view = ref.read(viewProvider)!;
-    await api.dbViewRowDelete(
-      view: view,
-      rowId: rowId,
-    );
+    await api.dbViewRowDelete(view: view, rowId: rowId);
 
     final currentRows = state.value?.list;
 
@@ -292,10 +271,7 @@ class DataRows extends _$DataRows {
         .toList();
 
     state = AsyncData(
-      NcRowList(
-        list: newRows,
-        pageInfo: state.value?.pageInfo,
-      ),
+      NcRowList(list: newRows, pageInfo: state.value?.pageInfo),
     );
   }
 
@@ -313,14 +289,11 @@ class DataRows extends _$DataRows {
     logger.info(result);
 
     return serialize(
-      await api.dbViewRowUpdate(
-        view: view,
-        rowId: rowId,
-        data: data,
-      ),
+      await api.dbViewRowUpdate(view: view, rowId: rowId, data: data),
       fn: (result) {
-        final updatedFields =
-            data.keys.where((field) => result.keys.contains(field));
+        final updatedFields = data.keys.where(
+          (field) => result.keys.contains(field),
+        );
 
         final currentRows = state.value?.list;
 
@@ -343,10 +316,7 @@ class DataRows extends _$DataRows {
         }).toList();
 
         state = AsyncData(
-          NcRowList(
-            list: newRows,
-            pageInfo: state.value?.pageInfo,
-          ),
+          NcRowList(list: newRows, pageInfo: state.value?.pageInfo),
         );
         return newRow;
       },
@@ -356,17 +326,11 @@ class DataRows extends _$DataRows {
   Future<Map<String, dynamic>> createRow(Map<String, dynamic> row) async {
     final view = ref.read(viewProvider)!;
     return serialize(
-      await api.dbViewRowCreate(
-        view: view,
-        data: row,
-      ),
+      await api.dbViewRowCreate(view: view, data: row),
       fn: (result) {
         state = AsyncData(
           NcRowList(
-            list: [
-              ...state.value?.list ?? [],
-              result,
-            ],
+            list: [...state.value?.list ?? [], result],
             pageInfo: state.value?.pageInfo,
           ),
         );
@@ -382,9 +346,7 @@ class DataRows extends _$DataRows {
 
     final table = ref.watch(tableProvider);
     final rows = state.valueOrNull?.list ?? [];
-    return rows.firstWhereOrNull(
-          (row) => table?.getPkFromRow(row) == rowId,
-        ) ??
+    return rows.firstWhereOrNull((row) => table?.getPkFromRow(row) == rowId) ??
         {};
   }
 }
@@ -431,10 +393,7 @@ class RowNested extends _$RowNested {
 
     return serialize(
       await fn(column: column, rowId: rowId, where: where),
-      fn: (result) => (
-        _populate(result.list),
-        result.pageInfo!,
-      ),
+      fn: (result) => (_populate(result.list), result.pageInfo!),
     );
   }
 
@@ -473,20 +432,15 @@ class RowNested extends _$RowNested {
         where: where,
       ),
       fn: (result) {
-        state = AsyncData(
-          (
-            [
-              ...list,
-              ..._populate(result.list),
-            ],
-            result.pageInfo,
-          ),
-        );
+        state = AsyncData((
+          [...list, ..._populate(result.list)],
+          result.pageInfo,
+        ));
       },
     );
   }
 
-  _invalidate() {
+  void _invalidate() {
     ref
       ..invalidateSelf()
       ..invalidate(dataRowsProvider)
@@ -495,33 +449,27 @@ class RowNested extends _$RowNested {
       );
   }
 
-  Future<String> remove({
-    required String refRowId,
-  }) async =>
-      serialize(
-        await api.dbTableRowNestedRemove(
-          column: column,
-          rowId: rowId,
-          refRowId: refRowId,
-        ),
-        fn: (result) {
-          _invalidate();
-          return result;
-        },
-      );
+  Future<String> remove({required String refRowId}) async => serialize(
+    await api.dbTableRowNestedRemove(
+      column: column,
+      rowId: rowId,
+      refRowId: refRowId,
+    ),
+    fn: (result) {
+      _invalidate();
+      return result;
+    },
+  );
 
-  Future<String> link({
-    required refRowId,
-  }) async =>
-      serialize(
-        await api.dbTableRowNestedAdd(
-          column: column,
-          rowId: rowId,
-          refRowId: refRowId,
-        ),
-        fn: (result) {
-          _invalidate();
-          return result;
-        },
-      );
+  Future<String> link({required refRowId}) async => serialize(
+    await api.dbTableRowNestedAdd(
+      column: column,
+      rowId: rowId,
+      refRowId: refRowId,
+    ),
+    fn: (result) {
+      _invalidate();
+      return result;
+    },
+  );
 }

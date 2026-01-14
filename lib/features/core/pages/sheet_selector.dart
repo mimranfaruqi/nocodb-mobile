@@ -11,43 +11,40 @@ import 'package:nocodb/nocodb_sdk/models.dart';
 class SheetSelectorPage extends HookConsumerWidget {
   const SheetSelectorPage({super.key});
 
-  Widget Function(
-    BuildContext,
-    int,
-  ) _viewBuilder({
+  Widget Function(BuildContext, int) _viewBuilder({
     required List<NcSlimTable> tables,
     required WidgetRef ref,
-  }) =>
-      (context, index) {
-        final viewId = ref.watch(viewProvider)?.id;
-        final table = tables[index];
-        return ref.watch(viewListProvider(table.id)).when(
-              data: (views) => ListView.separated(
-                separatorBuilder: (context, index) => const Divider(
-                  height: 2,
-                ),
-                itemBuilder: (context, index) {
-                  final view = views.list[index];
-                  return ListTile(
-                    title: Text(view.title),
-                    subtitle: Text('type: ${view.type.name}'),
-                    selected: view.id == viewId,
-                    onTap: () async {
-                      await selectView(ref, view).then(
-                        (value) => Navigator.pop(context),
-                      );
-                    },
-                  );
+  }) => (context, index) {
+    final viewId = ref.watch(viewProvider)?.id;
+    final table = tables[index];
+    return ref
+        .watch(viewListProvider(table.id))
+        .when(
+          data: (views) => ListView.separated(
+            separatorBuilder: (context, index) => const Divider(height: 2),
+            itemBuilder: (context, index) {
+              final view = views.list[index];
+              return ListTile(
+                title: Text(view.title),
+                subtitle: Text('type: ${view.type.name}'),
+                selected: view.id == viewId,
+                onTap: () async {
+                  await selectView(
+                    ref,
+                    view,
+                  ).then((value) => Navigator.pop(context));
                 },
-                itemCount: views.list.length,
-              ),
-              error: (error, stackTrace) {
-                notifyError(context, error, stackTrace);
-                return const SizedBox();
-              },
-              loading: () => const CircularProgressIndicator(),
-            );
-      };
+              );
+            },
+            itemCount: views.list.length,
+          ),
+          error: (error, stackTrace) {
+            notifyError(context, error, stackTrace);
+            return const SizedBox();
+          },
+          loading: () => const CircularProgressIndicator(),
+        );
+  };
 
   Widget _buildDrawer({
     required List<NcSlimTable> tables,
@@ -63,8 +60,10 @@ class SheetSelectorPage extends HookConsumerWidget {
                 title: Text(table.title),
                 selected: table.id == tableId,
                 onTap: () {
-                  final index =
-                      tables.map((t) => t.id).toList().indexOf(table.id);
+                  final index = tables
+                      .map((t) => t.id)
+                      .toList()
+                      .indexOf(table.id);
                   controller.jumpToPage(index);
                   Navigator.pop(context);
                 },
@@ -81,8 +80,10 @@ class SheetSelectorPage extends HookConsumerWidget {
     required NcProject project,
   }) {
     final tableId = ref.watch(tableProvider)?.id ?? '';
-    final initialIndex =
-        tables.map((table) => table.id).toList().indexOf(tableId);
+    final initialIndex = tables
+        .map((table) => table.id)
+        .toList()
+        .indexOf(tableId);
     logger
       ..info('tableId: $tableId')
       ..info('initialIndex: $initialIndex');
@@ -91,9 +92,7 @@ class SheetSelectorPage extends HookConsumerWidget {
       initialLength: tables.length,
       initialIndex: initialIndex,
     );
-    final pageController = usePageController(
-      initialPage: initialIndex,
-    );
+    final pageController = usePageController(initialPage: initialIndex);
 
     final context = useContext();
 
@@ -101,13 +100,6 @@ class SheetSelectorPage extends HookConsumerWidget {
       length: tables.length,
       child: Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
           title: Text(project.title),
           bottom: TabBar(
             onTap: (index) {
@@ -125,31 +117,25 @@ class SheetSelectorPage extends HookConsumerWidget {
             tabController.animateTo(index);
 
             final table = tables[index];
-            await api.dbTableRead(tableId: table.id).then((result) {
-              result.when(
-                ok: (table) async {
-                  await selectTable(ref, table);
-                },
-                ng: (error, stackTrace) =>
-                    notifyError(context, error, stackTrace),
-              );
-            }).onError(
-              (error, stackTrace) => notifyError(context, error, stackTrace),
-            );
+            await api
+                .dbTableRead(tableId: table.id)
+                .then((result) {
+                  result.when(
+                    ok: (table) async {
+                      await selectTable(ref, table);
+                    },
+                    ng: (error, stackTrace) {
+                      notifyError(context, error, stackTrace);
+                    },
+                  );
+                })
+                .onError((error, stackTrace) {
+                  notifyError(context, error, stackTrace);
+                });
           },
           controller: pageController,
-          itemBuilder: _viewBuilder(
-            ref: ref,
-            tables: tables,
-          ),
+          itemBuilder: _viewBuilder(ref: ref, tables: tables),
         ),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            child: const Icon(Icons.list),
-          ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
         drawer: _buildDrawer(
           tables: tables,
           tableId: tableId,
@@ -165,12 +151,10 @@ class SheetSelectorPage extends HookConsumerWidget {
     if (project == null) {
       return const SizedBox();
     }
-    return ref.watch(tableListProvider(project.id)).when(
-          data: (list) => _build(
-            tables: list.list,
-            ref: ref,
-            project: project,
-          ),
+    return ref
+        .watch(tableListProvider(project.id))
+        .when(
+          data: (list) => _build(tables: list.list, ref: ref, project: project),
           error: (error, stackTrace) {
             notifyError(context, error, stackTrace);
             return const SizedBox();

@@ -23,20 +23,21 @@ part 'router.g.dart';
   final rawHeader = parts[0];
   final rawPayload = parts[1];
 
-  final header =
-      String.fromCharCodes(base64Decode(base64.normalize(rawHeader)));
-  final payload =
-      String.fromCharCodes(base64Decode(base64.normalize(rawPayload)));
+  final header = String.fromCharCodes(
+    base64Decode(base64.normalize(rawHeader)),
+  );
+  final payload = String.fromCharCodes(
+    base64Decode(base64.normalize(rawPayload)),
+  );
   return (jsonDecode(header), jsonDecode(payload));
 }
 
-jwtTsToDateTime(int timestamp) =>
+DateTime jwtTsToDateTime(int timestamp) =>
     DateTime.fromMicrosecondsSinceEpoch(timestamp * 1000 * 1000);
 
 (DateTime iat, DateTime exp) getIatAndExpFromPayload(
   Map<String, dynamic> payload,
-) =>
-    (jwtTsToDateTime(payload['iat']), jwtTsToDateTime(payload['exp']));
+) => (jwtTsToDateTime(payload['iat']), jwtTsToDateTime(payload['exp']));
 
 bool isAuthTokenAlive(String authToken) {
   final (header, payload) = decodeJwt(authToken);
@@ -68,39 +69,42 @@ FutureOr<String?> redirect(
     final s = await settings.get();
     if (s == null) {
       await settings.clear();
-      return const HomeRoute().location;
+      // Only redirect to HomeRoute if not already there
+      if (state.uri.toString() != const HomeRoute().location) {
+        return const HomeRoute().location;
+      }
+      return null;
     }
     final Settings(:host, :token, :baseId) = s;
 
     logger
       ..config('host: $host')
       ..config('state.uri: ${state.uri}');
-    if (state.uri.toString() == const HomeRoute().location) {
-      if (token is AuthToken && !isAuthTokenAlive(token.authToken)) {
-        logger.info('authToken is expired.');
+
+    // Check if token is expired
+    if (token is AuthToken && !isAuthTokenAlive(token.authToken)) {
+      logger.info('authToken is expired.');
+      await settings.clear();
+      if (state.uri.toString() != const HomeRoute().location) {
         return const HomeRoute().location;
       }
+      return null;
+    }
 
+    // If user is authenticated and trying to access login page, redirect to appropriate page
+    if (state.uri.toString() == const HomeRoute().location) {
       api.init(host, token: token);
-      if (baseId != null && baseId.isNotEmpty) {
-        await selectProjectFromRef(
-          ref,
-          NcProject(
-            id: baseId,
-            baseId: baseId,
-            title: baseId,
-          ),
-        );
-        return const SheetRoute().location;
-      }
-
-      // TODO: Verify the validity of the credentials by calling an appropriate API.
+      // After login, always go to project list first, not directly to a sheet
+      // This gives user a chance to select a project and navigate properly
       if (isCloud(host)) {
         return const CloudProjectListRoute().location;
       } else {
         return const ProjectListRoute().location;
       }
     }
+
+    // For all other routes, ensure API is initialized with credentials
+    api.init(host, token: token);
   } catch (e, s) {
     logger
       ..warning(e)
@@ -113,13 +117,14 @@ FutureOr<String?> redirect(
 
 @riverpod
 GoRouter router(Ref ref) => GoRouter(
-      routes: $appRoutes,
-      debugLogDiagnostics: true,
-      redirect: (context, state) async {
-        final location = await redirect(ref, context, state);
-        if (location != null) {
-          logger.info('redirected to $location');
-        }
-        return location;
-      },
-    );
+  routes: $appRoutes,
+  debugLogDiagnostics: true,
+  redirect: (context, state) async {
+    final location = await redirect(ref, context, state);
+    if (location != null) {
+      logger.info('redirected to $location');
+    }
+    return location;
+  },
+  navigatorKey: GlobalKey<NavigatorState>(),
+);

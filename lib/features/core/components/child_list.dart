@@ -25,26 +25,26 @@ class _Card extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Card(
-        child: Column(
+    child: Column(
+      children: [
+        ListTile(
+          title: Text(value.toString()),
+          subtitle: Text('PrimaryKey: $refRowId'),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            ListTile(
-              title: Text(value.toString()),
-              subtitle: Text('PrimaryKey: $refRowId'),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                UnlinkTextButton(
-                  column: column,
-                  rowId: rowId,
-                  refRowId: refRowId,
-                  relation: relation,
-                ),
-              ],
+            UnlinkTextButton(
+              column: column,
+              rowId: rowId,
+              refRowId: refRowId,
+              relation: relation,
             ),
           ],
         ),
-      );
+      ],
+    ),
+  );
 }
 
 class ChildList extends HookConsumerWidget {
@@ -60,10 +60,7 @@ class ChildList extends HookConsumerWidget {
 
   static const debug = true;
 
-  Widget _buildBase({
-    required Widget child,
-    Future<void> Function()? onEnd,
-  }) {
+  Widget _buildBase({required Widget child, Future<void> Function()? onEnd}) {
     final context = useContext();
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -71,10 +68,7 @@ class ChildList extends HookConsumerWidget {
         Material(
           elevation: 3,
           child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 8,
-              horizontal: 8,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
             child: Row(
               children: [
                 Text(
@@ -87,9 +81,7 @@ class ChildList extends HookConsumerWidget {
                 const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.close,
-                  ),
+                  icon: const Icon(Icons.close),
                 ),
               ],
             ),
@@ -97,9 +89,7 @@ class ChildList extends HookConsumerWidget {
         ),
         ScrollDetector(
           onEnd: onEnd,
-          child: Expanded(
-            child: child,
-          ),
+          child: Expanded(child: child),
         ),
         Material(
           elevation: 3,
@@ -130,36 +120,28 @@ class ChildList extends HookConsumerWidget {
     );
   }
 
-  _build({
-    required PrimaryRecordList list,
-    required WidgetRef ref,
-  }) {
+  Widget _build({required PrimaryRecordList list, required WidgetRef ref}) {
     final (records, pageInfo) = list;
 
     final children = records
-        .map(
-          (record) {
-            final (refRowId, value) = record;
+        .map((record) {
+          final (refRowId, value) = record;
 
-            return _Card(
-              refRowId: refRowId,
-              value: value,
-              rowId: rowId,
-              column: column,
-              relation: relation,
-            );
-          },
-        )
+          return _Card(
+            refRowId: refRowId,
+            value: value,
+            rowId: rowId,
+            column: column,
+            relation: relation,
+          );
+        })
         .whereNotNull()
         .toList();
 
     final context = useContext();
 
     return _buildBase(
-      child: ListView(
-        shrinkWrap: true,
-        children: children,
-      ),
+      child: ListView(shrinkWrap: true, children: children),
       onEnd: () async {
         if (pageInfo?.isLastPage == true) {
           return;
@@ -169,27 +151,23 @@ class ChildList extends HookConsumerWidget {
             .read(rowNestedProvider(rowId, column, relation).notifier)
             .load()
             .then((_) {
-          Future.delayed(
-            const Duration(milliseconds: 500),
-            () {
-              context.loaderOverlay.hide();
-            },
-          );
-        });
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.loaderOverlay.hide();
+              });
+            });
       },
     );
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ref.watch(rowNestedProvider(rowId, column, relation)).when(
-            data: (list) => list.$1.isEmpty
-                ? _buildBase(
-                    child: const Center(child: Text('No child records.')),
-                  )
-                : _build(list: list, ref: ref),
-            error: (error, stackTrace) =>
-                Center(child: Text('$error\n$stackTrace')),
-            loading: () => const Center(child: CircularProgressIndicator()),
-          );
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(rowNestedProvider(rowId, column, relation))
+      .when(
+        data: (list) => list.$1.isEmpty
+            ? _buildBase(child: const Center(child: Text('No child records.')))
+            : _build(list: list, ref: ref),
+        error: (error, stackTrace) =>
+            Center(child: Text('$error\n$stackTrace')),
+        loading: () => const Center(child: CircularProgressIndicator()),
+      );
 }

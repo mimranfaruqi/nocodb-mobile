@@ -4,10 +4,7 @@ import 'package:nocodb/common/flash_wrapper.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 
-enum UnlinkButtonType {
-  text,
-  icon,
-}
+enum UnlinkButtonType { text, icon }
 
 class _UnlinkButton extends HookConsumerWidget {
   const _UnlinkButton({
@@ -30,25 +27,16 @@ class _UnlinkButton extends HookConsumerWidget {
           .watch(rowNestedProvider(rowId, column, relation).notifier)
           .remove(refRowId: refRowId)
           .then((msg) {
-        notifySuccess(context, message: msg);
-      }).onError(
-        (error, stackTrace) => notifyError(
-          context,
-          error,
-          stackTrace,
-        ),
-      );
+            notifySuccess(context, message: msg);
+          })
+          .onError((error, stackTrace) {
+            notifyError(context, error, stackTrace);
+          });
     }
 
     return type == UnlinkButtonType.icon
-        ? IconButton(
-            icon: const Icon(Icons.link_off),
-            onPressed: onPressed,
-          )
-        : TextButton(
-            onPressed: onPressed,
-            child: const Text('Unlink'),
-          );
+        ? IconButton(icon: const Icon(Icons.link_off), onPressed: onPressed)
+        : TextButton(onPressed: onPressed, child: const Text('Unlink'));
   }
 }
 
@@ -67,12 +55,12 @@ class UnlinkTextButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => _UnlinkButton(
-        column: column,
-        rowId: rowId,
-        refRowId: refRowId,
-        relation: relation,
-        type: UnlinkButtonType.text,
-      );
+    column: column,
+    rowId: rowId,
+    refRowId: refRowId,
+    relation: relation,
+    type: UnlinkButtonType.text,
+  );
 }
 
 class UnlinkIconButton extends HookConsumerWidget {
@@ -90,10 +78,10 @@ class UnlinkIconButton extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => _UnlinkButton(
-        column: column,
-        rowId: rowId,
-        refRowId: refRowId,
-        relation: relation,
-        type: UnlinkButtonType.icon,
-      );
+    column: column,
+    rowId: rowId,
+    refRowId: refRowId,
+    relation: relation,
+    type: UnlinkButtonType.icon,
+  );
 }

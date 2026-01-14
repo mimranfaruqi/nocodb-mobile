@@ -16,9 +16,11 @@ class _ProjectList extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final workspace = ref.watch(workspaceProvider);
-    return ref.watch(baseListProvider(workspace!.id)).when(
+    return ref
+        .watch(baseListProvider(workspace!.id))
+        .when(
           data: (data) => _build(ref, data),
-          error: (e, s) => Text('$e\n$s'),
+          error: (e, s) => Center(child: Text('Error loading projects: $e')),
           loading: () => const Center(child: CircularProgressIndicator()),
         );
   }
@@ -37,9 +39,10 @@ class _ProjectList extends HookConsumerWidget {
             child: ListTile(
               title: Text(project.title),
               onTap: () async {
-                await selectProject(ref, project).then(
-                  (data) async => await const SheetRoute().push(context),
-                );
+                await selectProject(
+                  ref,
+                  project,
+                ).then((data) async => await const SheetRoute().push(context));
               },
             ),
           );
@@ -103,13 +106,11 @@ class CloudProjectListPage extends HookConsumerWidget {
             icon: const Icon(Icons.account_circle),
             itemBuilder: (context) => <PopupMenuEntry>[
               PopupMenuItem(
-                child: const ListTile(
-                  title: Text('Logout'),
-                ),
+                child: const ListTile(title: Text('Logout')),
                 onTap: () async {
-                  await settings
-                      .clear()
-                      .then((value) => const HomeRoute().push(context));
+                  await settings.clear().then(
+                    (value) => const HomeRoute().replace(context),
+                  );
                 },
               ),
             ],
@@ -128,10 +129,21 @@ class CloudProjectListPage extends HookConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ref.watch(workspaceListProvider).when(
-            data: (data) => _buildScaffold(ref, const _ProjectList(), data),
-            error: (e, s) => Center(child: Text('$e\n$s')),
-            loading: () => const Center(child: CircularProgressIndicator()),
-          );
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(workspaceListProvider)
+      .when(
+        data: (data) => _buildScaffold(ref, const _ProjectList(), data),
+        error: (e, s) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error: $e'),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          });
+          return const Center(child: Text('Error loading workspaces'));
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+      );
 }

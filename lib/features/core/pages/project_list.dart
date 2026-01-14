@@ -10,6 +10,10 @@ import 'package:nocodb/routes.dart';
 
 const _divider = Divider(height: 1);
 
+// Hard-coded workspace ID for self-hosted NocoDB
+// TODO: Add workspace selector UI to allow users to select different workspaces
+const String _defaultWorkspaceId = 'wg0nq0zo';
+
 class ProjectListPage extends HookConsumerWidget {
   const ProjectListPage({super.key});
 
@@ -23,13 +27,11 @@ class ProjectListPage extends HookConsumerWidget {
             icon: const Icon(Icons.account_circle),
             itemBuilder: (context) => <PopupMenuEntry>[
               PopupMenuItem(
-                child: const ListTile(
-                  title: Text('Logout'),
-                ),
+                child: const ListTile(title: Text('Logout')),
                 onTap: () async {
-                  await settings
-                      .clear()
-                      .then((value) => const HomeRoute().push(context));
+                  await settings.clear().then(
+                    (value) => const HomeRoute().replace(context),
+                  );
                 },
               ),
             ],
@@ -60,9 +62,10 @@ class ProjectListPage extends HookConsumerWidget {
             child: ListTile(
               title: Text(project.title),
               onTap: () async {
-                await selectProject(ref, project).then(
-                  (data) async => await const SheetRoute().push(context),
-                );
+                await selectProject(
+                  ref,
+                  project,
+                ).then((data) async => await const SheetRoute().push(context));
               },
             ),
           );
@@ -94,10 +97,22 @@ class ProjectListPage extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => _buildScaffold(
-        ref.watch(projectListProvider).when(
-              data: (data) => _build(data.list, ref),
-              error: (error, stacktrace) => Text('$error\n$stacktrace'),
-              loading: () => const Center(child: CircularProgressIndicator()),
-            ),
-      );
+    ref
+        .watch(baseListProvider(_defaultWorkspaceId))
+        .when(
+          data: (data) => _build(data.list, ref),
+          error: (error, stacktrace) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error loading projects: $error'),
+                  duration: const Duration(seconds: 5),
+                ),
+              );
+            });
+            return const Center(child: Text('Error loading projects'));
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+        ),
+  );
 }

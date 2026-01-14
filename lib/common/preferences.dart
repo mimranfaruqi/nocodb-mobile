@@ -5,22 +5,18 @@ class Preferences {
   late SharedPreferences _prefs;
   late FlutterSecureStorage _secureStorage;
 
-  load() async {
+  Future<void> load() async {
     _prefs = await SharedPreferences.getInstance();
     const aOptions = AndroidOptions(encryptedSharedPreferences: true);
-    _secureStorage = const FlutterSecureStorage(
-      aOptions: aOptions,
-    );
+    _secureStorage = const FlutterSecureStorage(aOptions: aOptions);
   }
 
-  clear() async {
+  Future<void> clear() async {
     await _prefs.clear();
     await _secureStorage.deleteAll();
   }
 
-  Future<T?> get<T>({
-    required String key,
-  }) async {
+  Future<T?> get<T>({required String key}) async {
     dynamic v;
     switch (T) {
       case const (String):
@@ -42,15 +38,11 @@ class Preferences {
     } else if (v.runtimeType == T) {
       return v;
     } else {
-      throw UnsupportedError(
-        'expected: $T, got: ${v.runtimeType}',
-      );
+      throw UnsupportedError('expected: $T, got: ${v.runtimeType}');
     }
   }
 
-  Future<String?> getSecure({
-    required String key,
-  }) async =>
+  Future<String?> getSecure({required String key}) async =>
       await _secureStorage.read(key: key);
 
   Future<void> set({

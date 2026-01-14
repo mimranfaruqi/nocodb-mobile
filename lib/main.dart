@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -11,10 +11,7 @@ const useMaterial3 = false;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb) {
-    await FlutterDownloader.initialize(
-      debug: true,
-      ignoreSsl: true,
-    );
+    await FlutterDownloader.initialize(debug: true, ignoreSsl: true);
   }
   // https://api.flutter.dev/flutter/foundation/FlutterError/demangleStackTrace.html
   FlutterError.demangleStackTrace = (stack) {
@@ -28,17 +25,11 @@ void main() async {
     return stack;
   };
 
-  runApp(
-    const ProviderScope(
-      child: App(),
-    ),
-  );
+  runApp(const ProviderScope(child: App()));
 }
 
 class App extends HookConsumerWidget {
-  const App({
-    super.key,
-  });
+  const App({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,14 +40,8 @@ class App extends HookConsumerWidget {
         debugShowCheckedModeBanner: false,
         routerConfig: r,
         theme: useMaterial3
-            ? ThemeData(
-                useMaterial3: true,
-                colorSchemeSeed: Colors.black,
-              )
-            : ThemeData(
-                useMaterial3: false,
-                primarySwatch: Colors.blue,
-              ),
+            ? ThemeData(useMaterial3: true, colorSchemeSeed: Colors.black)
+            : ThemeData(useMaterial3: false, primarySwatch: Colors.blue),
         themeMode: ThemeMode.light,
       ),
     );

@@ -26,24 +26,29 @@ class _Card extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Card(
-        child: ListTile(
-          title: Text(pv.toString()),
-          subtitle: Text('PrimaryKey: $refRowId'),
-          onTap: () async {
-            await ref
-                .read(
-                  rowNestedProvider(rowId, column, relation, excluded: true)
-                      .notifier,
-                )
-                .link(refRowId: refRowId)
-                .then((msg) {
+    child: ListTile(
+      title: Text(pv.toString()),
+      subtitle: Text('PrimaryKey: $refRowId'),
+      onTap: () async {
+        await ref
+            .read(
+              rowNestedProvider(
+                rowId,
+                column,
+                relation,
+                excluded: true,
+              ).notifier,
+            )
+            .link(refRowId: refRowId)
+            .then((msg) {
               notifySuccess(context, message: msg);
-            }).onError(
-              (error, stackTrace) => notifyError(context, error, stackTrace),
-            );
-          },
-        ),
-      );
+            })
+            .onError((error, stackTrace) {
+              notifyError(context, error, stackTrace);
+            });
+      },
+    ),
+  );
 }
 
 class LinkRecordPage extends HookConsumerWidget {
@@ -57,7 +62,7 @@ class LinkRecordPage extends HookConsumerWidget {
 
   static const debug = true;
 
-  _build({
+  ScrollDetector _build({
     required PrimaryRecordList list,
     required NcTable relation,
     required NcTableColumn column,
@@ -67,19 +72,17 @@ class LinkRecordPage extends HookConsumerWidget {
     final context = useContext();
 
     final children = records
-        .map(
-          (record) {
-            final (key, value) = record;
+        .map((record) {
+          final (key, value) = record;
 
-            return _Card(
-              refRowId: key,
-              pv: value,
-              rowId: rowId,
-              column: column,
-              relation: relation,
-            );
-          },
-        )
+          return _Card(
+            refRowId: key,
+            pv: value,
+            rowId: rowId,
+            column: column,
+            relation: relation,
+          );
+        })
         .whereNotNull()
         .toList();
 
@@ -91,24 +94,22 @@ class LinkRecordPage extends HookConsumerWidget {
         context.loaderOverlay.show();
         await ref
             .read(
-              rowNestedProvider(rowId, column, relation, excluded: true)
-                  .notifier,
+              rowNestedProvider(
+                rowId,
+                column,
+                relation,
+                excluded: true,
+              ).notifier,
             )
             .load()
             .then((_) {
-          Future.delayed(
-            const Duration(milliseconds: 500),
-            () {
-              context.loaderOverlay.hide();
-              logger.info('done');
-            },
-          );
-        });
+              Future.delayed(const Duration(milliseconds: 500), () {
+                context.loaderOverlay.hide();
+                logger.info('done');
+              });
+            });
       },
-      child: ListView(
-        shrinkWrap: true,
-        children: children,
-      ),
+      child: ListView(shrinkWrap: true, children: children),
     );
   }
 
@@ -139,15 +140,10 @@ class LinkRecordPage extends HookConsumerWidget {
     );
   }
 
-  Scaffold _buildEmptyScaffold({
-    required Widget body,
-  }) =>
-      Scaffold(
-        appBar: AppBar(
-          title: const Text('Link record'),
-        ),
-        body: body,
-      );
+  Scaffold _buildEmptyScaffold({required Widget body}) => Scaffold(
+    appBar: AppBar(title: const Text('Link record')),
+    body: body,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -175,14 +171,7 @@ class LinkRecordPage extends HookConsumerWidget {
     }
 
     final body = ref
-        .watch(
-          rowNestedProvider(
-            rowId,
-            column,
-            relation,
-            excluded: true,
-          ),
-        )
+        .watch(rowNestedProvider(rowId, column, relation, excluded: true))
         .when(
           data: (list) {
             if (list.$1.isEmpty) {
@@ -195,9 +184,8 @@ class LinkRecordPage extends HookConsumerWidget {
               ref: ref,
             );
           },
-          error: (error, stackTrace) => Center(
-            child: Text('$error\n$stackTrace'),
-          ),
+          error: (error, stackTrace) =>
+              Center(child: Text('$error\n$stackTrace')),
           loading: () => const Center(child: CircularProgressIndicator()),
         );
 
