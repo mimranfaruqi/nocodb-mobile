@@ -13,14 +13,14 @@ part 'models.g.dart';
 part 'models_extensions.dart';
 
 @freezed
-abstract class Result<T> with _$Result<T> {
+sealed class Result<T> with _$Result<T> {
   const factory Result.ok(T value) = Ok<T>;
 
   const factory Result.ng(Object error, StackTrace? stackTrace) = Ng<T>;
 }
 
 @freezed
-abstract class HttpFn with _$HttpFn {
+sealed class HttpFn with _$HttpFn {
   const factory HttpFn.get(
     Future<Response> Function(
       Uri url, {
@@ -39,7 +39,7 @@ abstract class HttpFn with _$HttpFn {
 }
 
 @Freezed(genericArgumentFactories: true)
-class NcList<T> with _$NcList<T> {
+sealed class NcList<T> with _$NcList<T> {
   const factory NcList({
     required List<T> list,
     required NcPageInfo? pageInfo,
@@ -53,7 +53,7 @@ class NcList<T> with _$NcList<T> {
 }
 
 @freezed
-class NcTables with _$NcTables {
+sealed class NcTables with _$NcTables {
   @JsonSerializable()
   const factory NcTables({
     required NcTable table,
@@ -64,7 +64,7 @@ class NcTables with _$NcTables {
 }
 
 @freezed
-class NcUser with _$NcUser {
+sealed class NcUser with _$NcUser {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcUser({
     required String id,
@@ -78,7 +78,7 @@ class NcUser with _$NcUser {
 }
 
 @freezed
-class NcWorkspace with _$NcWorkspace {
+sealed class NcWorkspace with _$NcWorkspace {
   const factory NcWorkspace({
     required String id,
     required String title,
@@ -88,7 +88,7 @@ class NcWorkspace with _$NcWorkspace {
 }
 
 @freezed
-class NcProject with _$NcProject {
+sealed class NcProject with _$NcProject {
   const factory NcProject({
     required String? baseId,
     required String id,
@@ -99,7 +99,7 @@ class NcProject with _$NcProject {
 }
 
 @freezed
-class NcPageInfo with _$NcPageInfo {
+sealed class NcPageInfo with _$NcPageInfo {
   const factory NcPageInfo({
     required int totalRows,
     required int page,
@@ -113,7 +113,7 @@ class NcPageInfo with _$NcPageInfo {
 }
 
 @freezed
-class NcSort with _$NcSort {
+sealed class NcSort with _$NcSort {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcSort({
     required String id,
@@ -148,7 +148,7 @@ typedef NcSortList = NcList<NcSort>;
 typedef NcRowList = NcList<Map<String, dynamic>>;
 
 @freezed
-class NcSlimTable with _$NcSlimTable {
+sealed class NcSlimTable with _$NcSlimTable {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcSlimTable({
     required String id,
@@ -162,7 +162,7 @@ class NcSlimTable with _$NcSlimTable {
 }
 
 @freezed
-class NcSimpleTableList with _$NcSimpleTableList {
+sealed class NcSimpleTableList with _$NcSimpleTableList {
   const factory NcSimpleTableList({required List<NcSlimTable> list}) =
       _NcSimpleTableList;
   factory NcSimpleTableList.fromJson(Map<String, dynamic> json) =>
@@ -170,7 +170,7 @@ class NcSimpleTableList with _$NcSimpleTableList {
 }
 
 @freezed
-class NcView with _$NcView {
+sealed class NcView with _$NcView {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcView({
     required String id,
@@ -184,7 +184,7 @@ class NcView with _$NcView {
 }
 
 @freezed
-class ViewList with _$ViewList {
+sealed class ViewList with _$ViewList {
   const factory ViewList({required List<NcView> list}) = _ViewList;
 
   factory ViewList.fromJson(Map<String, dynamic> json) =>
@@ -205,7 +205,7 @@ UITypes _toUITypes(dynamic v) {
 const _maxInt = 4294967296;
 
 @freezed
-class NcTableColumn with _$NcTableColumn {
+sealed class NcTableColumn with _$NcTableColumn {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcTableColumn({
     required String id,
@@ -230,7 +230,7 @@ class NcTableColumn with _$NcTableColumn {
 }
 
 @freezed
-class NcOption with _$NcOption {
+sealed class NcOption with _$NcOption {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcOption({
     required String color,
@@ -244,7 +244,7 @@ class NcOption with _$NcOption {
 }
 
 @freezed
-class NcColOptions with _$NcColOptions {
+sealed class NcColOptions with _$NcColOptions {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcColOptions({
     String? type,
@@ -280,7 +280,7 @@ ViewTypes _toViewTypes(dynamic v) {
 }
 
 @freezed
-class NcTable with _$NcTable {
+sealed class NcTable with _$NcTable {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcTable({
     required String id,
@@ -297,7 +297,7 @@ class NcTable with _$NcTable {
 }
 
 @freezed
-class NcViewColumn with _$NcViewColumn {
+sealed class NcViewColumn with _$NcViewColumn {
   @JsonSerializable(fieldRename: FieldRename.snake)
   const factory NcViewColumn({
     required String id,
@@ -325,7 +325,7 @@ SortDirectionTypes _toSortTypes(dynamic v) {
 }
 
 @freezed
-class NcAttachedFile with _$NcAttachedFile {
+sealed class NcAttachedFile with _$NcAttachedFile {
   const factory NcAttachedFile({
     required String url,
     required String title,

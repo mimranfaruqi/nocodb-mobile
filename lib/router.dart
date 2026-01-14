@@ -8,6 +8,7 @@ import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/utils.dart';
 import 'package:nocodb/routes.dart';
+import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'router.g.dart';
@@ -97,7 +98,7 @@ FutureOr<String?> redirect(
 }
 
 @riverpod
-GoRouter router(RouterRef ref) => GoRouter(
+GoRouter router(Ref ref) => GoRouter(
       routes: $appRoutes,
       debugLogDiagnostics: true,
       redirect: (context, state) async {

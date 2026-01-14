@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:nocodb/common/flash_wrapper.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/features/core/providers/providers.dart';

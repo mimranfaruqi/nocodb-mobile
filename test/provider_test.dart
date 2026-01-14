@@ -3,7 +3,7 @@ import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
 import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
-import 'package:riverpod/riverpod.dart' hide ErrorListener;
+import 'package:riverpod/riverpod.dart';
 // import 'package:test/test.dart';
 
 // https://riverpod.dev/ja/docs/essentials/testing
@@ -11,13 +11,13 @@ import 'package:riverpod/riverpod.dart' hide ErrorListener;
 /// disposes it at the end of the test.
 ProviderContainer createContainer({
   ProviderContainer? parent,
-  List<Override> overrides = const [],
+  List<Object?> overrides = const [],
   List<ProviderObserver>? observers,
 }) {
   // Create a ProviderContainer, and optionally allow specifying parameters.
   final container = ProviderContainer(
     parent: parent,
-    overrides: overrides,
+    overrides: overrides as dynamic,
     observers: observers,
   );
 

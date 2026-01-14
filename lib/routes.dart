@@ -39,13 +39,13 @@ part 'routes.g.dart';
     ),
   ],
 )
-class HomeRoute extends GoRouteData {
+class HomeRoute extends GoRouteData with $HomeRoute {
   const HomeRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const SignInPage();
 }
 
-class ProjectListRoute extends GoRouteData {
+class ProjectListRoute extends GoRouteData with $ProjectListRoute {
   const ProjectListRoute();
 
   @override
@@ -53,27 +53,27 @@ class ProjectListRoute extends GoRouteData {
       const ProjectListPage();
 }
 
-class CloudProjectListRoute extends GoRouteData {
+class CloudProjectListRoute extends GoRouteData with $CloudProjectListRoute {
   const CloudProjectListRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const CloudProjectListPage();
 }
 
-class SheetRoute extends GoRouteData {
+class SheetRoute extends GoRouteData with $SheetRoute {
   const SheetRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const SheetPage();
 }
 
-class SheetSelectorRoute extends GoRouteData {
+class SheetSelectorRoute extends GoRouteData with $SheetSelectorRoute {
   const SheetSelectorRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       const SheetSelectorPage();
 }
 
-class RowEditorRoute extends GoRouteData {
+class RowEditorRoute extends GoRouteData with $RowEditorRoute {
   const RowEditorRoute({this.id});
   final String? id;
 
@@ -86,13 +86,13 @@ class RowEditorRoute extends GoRouteData {
       );
 }
 
-class DebugRoute extends GoRouteData {
+class DebugRoute extends GoRouteData with $DebugRoute {
   const DebugRoute();
   @override
   Widget build(BuildContext context, GoRouterState state) => const DebugPage();
 }
 
-class LinkRecordRoute extends GoRouteData {
+class LinkRecordRoute extends GoRouteData with $LinkRecordRoute {
   const LinkRecordRoute({
     required this.columnId,
     required this.rowId,

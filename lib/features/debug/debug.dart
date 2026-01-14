@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:hooks_riverpod/legacy.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,7 +15,7 @@ final patternsProvider = StateProvider<Record>(
 );
 
 @freezed
-class Union with _$Union {
+sealed class Union with _$Union {
   factory Union.first(int value) = _UnionFirst;
   factory Union.second(double value) = _UnionSecond;
 }

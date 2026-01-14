@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:riverpod/riverpod.dart';
 
 extension ContextExtension on BuildContext {
   ThemeData get theme => Theme.of(this);
@@ -29,4 +30,8 @@ extension ListExtension<E> on List<E> {
 
 extension MapExtension<K, V> on Map<K, V> {
   Map<K, V> u() => Map<K, V>.unmodifiable(this);
+}
+
+extension AsyncValueLegacyX<T> on AsyncValue<T> {
+  T? get valueOrNull => asData?.value;
 }

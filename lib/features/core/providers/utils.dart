@@ -6,21 +6,21 @@ import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 
 sealed class ProviderReader {
-  T read<T>(ProviderListenable<T> provider);
+  T read<T>(Object provider);
 }
 
 class WidgetRefWrapper extends ProviderReader {
   WidgetRefWrapper(this.ref);
   final WidgetRef ref;
   @override
-  T read<T>(ProviderListenable<T> provider) => ref.read(provider);
+  T read<T>(Object provider) => ref.read(provider as dynamic);
 }
 
 class ProviderContainerWrapper extends ProviderReader {
   ProviderContainerWrapper(this.c);
   final ProviderContainer c;
   @override
-  T read<T>(ProviderListenable<T> provider) => c.read(provider);
+  T read<T>(Object provider) => c.read(provider as dynamic);
 }
 
 FutureOr<T> errorAdapter<T>(Object error, StackTrace? stackTrace) {

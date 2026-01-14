@@ -1,4 +1,5 @@
 import 'package:collection/collection.dart';
+import 'package:nocodb/common/extensions.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';

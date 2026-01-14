@@ -5,6 +5,7 @@ import 'package:nocodb/common/flash_wrapper.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
+import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/nocodb_sdk/utils.dart';
 import 'package:nocodb/routes.dart';
 

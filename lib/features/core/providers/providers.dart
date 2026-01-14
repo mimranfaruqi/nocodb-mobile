@@ -1,9 +1,11 @@
 import 'package:collection/collection.dart';
+import 'package:nocodb/common/extensions.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/nocodb_sdk/symbols.dart';
+import 'package:riverpod/legacy.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -70,7 +72,7 @@ class View extends _$View {
 }
 
 @riverpod
-Future<NcWorkspaceList> workspaceList(WorkspaceListRef ref) async => serialize(
+Future<NcWorkspaceList> workspaceList(Ref ref) async => serialize(
       await api.workspaceList(),
       fn: (ok) {
         if (ref.read(workspaceProvider) == null) {
@@ -81,27 +83,27 @@ Future<NcWorkspaceList> workspaceList(WorkspaceListRef ref) async => serialize(
     );
 
 @riverpod
-Future<NcProjectList> baseList(BaseListRef ref, workspaceId) async =>
+Future<NcProjectList> baseList(Ref ref, String workspaceId) async =>
     unwrap(await api.baseList(workspaceId));
 
 @riverpod
-Future<NcProjectList> projectList(ProjectListRef ref) async =>
+Future<NcProjectList> projectList(Ref ref) async =>
     unwrap(await api.projectList());
 
 @Riverpod(keepAlive: true)
 Future<NcSimpleTableList> tableList(
-  TableListRef ref,
+  Ref ref,
   String projectId,
 ) async =>
     unwrap(await api.dbTableList(projectId: projectId));
 
 @Riverpod(keepAlive: true)
-Future<ViewList> viewList(ViewListRef ref, String tableId) async =>
+Future<ViewList> viewList(Ref ref, String tableId) async =>
     unwrap(await api.dbViewList(tableId: tableId));
 
 @Riverpod(keepAlive: true)
 Future<List<NcViewColumn>> viewColumnList(
-  ViewColumnListRef ref,
+  Ref ref,
   String viewId,
 ) async =>
     unwrap(await api.dbViewColumnList(viewId: viewId));
