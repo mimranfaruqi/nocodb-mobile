@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/features/core/components/filter_panel.dart';
@@ -9,14 +10,16 @@ import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/routes.dart';
 
 /// A hierarchical navigation drawer showing tables and their views
-class AppNavigationDrawer extends StatelessWidget {
+class AppNavigationDrawer extends HookConsumerWidget {
   const AppNavigationDrawer({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final expandedTableId = useState<String?>(null);
+
     return Drawer(
-      child: Consumer(
-        builder: (context, ref, _) {
+      child: Builder(
+        builder: (context) {
           final project = ref.watch(projectProvider);
 
           // If no project is selected, drawer is not useful
@@ -99,10 +102,16 @@ class AppNavigationDrawer extends StatelessWidget {
                     data: (tables) => Column(
                       children: tables.list.map((table) {
                         final isTableSelected = currentTable?.id == table.id;
+                        final isExpanded = expandedTableId.value == table.id;
+                        
                         return Column(
                           children: [
                             ListTile(
-                              leading: const Icon(Icons.table_chart),
+                              leading: Icon(
+                                isExpanded 
+                                  ? Icons.expand_less 
+                                  : Icons.expand_more,
+                              ),
                               title: Text(
                                 table.title,
                                 style: TextStyle(
@@ -113,100 +122,71 @@ class AppNavigationDrawer extends StatelessWidget {
                               ),
                               selected: isTableSelected,
                               onTap: () async {
-                                // Fetch full table details and select it
-                                final fullTableResult = await api.dbTableRead(
-                                  tableId: table.id,
-                                );
-                                await fullTableResult.when(
-                                  ok: (fullTable) async {
-                                    // Use selectTable to properly update all providers
-                                    await selectTable(ref, fullTable);
-
-                                    final viewData = ref.read(
-                                      viewListProvider(table.id),
-                                    );
-                                    await viewData.whenData((views) {
-                                      if (views.list.isNotEmpty) {
-                                        ref
-                                            .read(viewProvider.notifier)
-                                            .set(views.list.first);
-                                      }
-                                    });
-
-                                    if (context.mounted) {
-                                      Navigator.pop(context);
-                                    }
-                                  },
-                                  ng: (error, stackTrace) {
-                                    // Error fetching table
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text('Error: $error'),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                );
+                                // Toggle expansion - collapse if already expanded, expand otherwise
+                                if (isExpanded) {
+                                  expandedTableId.value = null;
+                                } else {
+                                  expandedTableId.value = table.id;
+                                }
                               },
                             ),
-                            // Show views nested under all tables
-                            ref
-                                .watch(viewListProvider(table.id))
-                                .when(
-                                  data: (views) => Column(
-                                    children: views.list.map((view) {
-                                      final isViewSelected =
-                                          currentView?.id == view.id;
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 32.0,
-                                        ),
-                                        child: ListTile(
-                                          leading: const Icon(
-                                            Icons.view_agenda,
+                            // Show views only if this table is expanded
+                            if (isExpanded)
+                              ref
+                                  .watch(viewListProvider(table.id))
+                                  .when(
+                                    data: (views) => Column(
+                                      children: views.list.map((view) {
+                                        final isViewSelected =
+                                            currentView?.id == view.id;
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 32.0,
                                           ),
-                                          title: Text(
-                                            view.title,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: isViewSelected
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
+                                          child: ListTile(
+                                            leading: const Icon(
+                                              Icons.view_agenda,
+                                              size: 18,
                                             ),
+                                            title: Text(
+                                              view.title,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: isViewSelected
+                                                    ? FontWeight.bold
+                                                    : FontWeight.normal,
+                                              ),
+                                            ),
+                                            selected: isViewSelected,
+                                            onTap: () async {
+                                              // When selecting a view, use selectView to properly update all providers
+                                              await selectView(ref, view);
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                              }
+                                            },
                                           ),
-                                          selected: isViewSelected,
-                                          onTap: () async {
-                                            // When selecting a view, use selectView to properly update all providers
-                                            await selectView(ref, view);
-                                            if (context.mounted) {
-                                              Navigator.pop(context);
-                                            }
-                                          },
-                                        ),
-                                      );
-                                    }).toList(),
-                                  ),
-                                  loading: () => const Padding(
-                                    padding: EdgeInsets.only(left: 32.0),
-                                    child: SizedBox(
-                                      height: 40,
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
+                                        );
+                                      }).toList(),
+                                    ),
+                                    loading: () => const Padding(
+                                      padding: EdgeInsets.only(left: 32.0),
+                                      child: SizedBox(
+                                        height: 40,
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  error: (error, stack) => Padding(
-                                    padding: const EdgeInsets.only(left: 32.0),
-                                    child: ListTile(
-                                      title: Text('Error: $error'),
+                                    error: (error, stack) => Padding(
+                                      padding: const EdgeInsets.only(left: 32.0),
+                                      child: ListTile(
+                                        title: Text('Error: $error'),
+                                      ),
                                     ),
                                   ),
-                                ),
                           ],
                         );
                       }).toList(),
@@ -233,10 +213,7 @@ class AppNavigationDrawer extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              SizedBox(
-                height: 300,
-                child: const FilterPanel(),
-              ),
+              const FilterPanel(),
             ],
           );
         },
@@ -244,3 +221,4 @@ class AppNavigationDrawer extends StatelessWidget {
     );
   }
 }
+
