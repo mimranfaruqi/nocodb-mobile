@@ -1,7 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:nocodb/common/extensions.dart';
-import 'package:nocodb/common/logger.dart';
-import 'package:nocodb/features/core/providers/utils.dart';
+import 'package:nocodb/common/logger.dart';import 'package:nocodb/features/core/providers/filter_provider.dart';import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/nocodb_sdk/symbols.dart';
@@ -142,6 +141,41 @@ final searchQueryFamily = StateProviderFamily<SearchQuery?, NcView>(
 class DataRows extends _$DataRows {
   late String? _pkName;
 
+  Future<NcRowList> _fetchRowsWithFallback({
+    required NcView view,
+    required NcTable table,
+    required Map<String, NcTable> relations,
+    SearchQuery? where,
+    int? offset,
+    int? limit,
+  }) async {
+    try {
+      return await serialize(
+        await api.dbViewRowList(
+          view: view,
+          where: where,
+          offset: offset,
+          limit: limit,
+        ),
+        fn: (result) => populate(result, table, relations),
+      );
+    } catch (e, s) {
+      if (where == null) {
+        rethrow;
+      }
+      logger.warning('Row fetch with user filter failed; retrying without filter: $e');
+      logger.fine(s.toString());
+      return await serialize(
+        await api.dbViewRowList(
+          view: view,
+          offset: offset,
+          limit: limit,
+        ),
+        fn: (result) => populate(result, table, relations),
+      );
+    }
+  }
+
   dynamic _getForeignKeyPrimaryValue({
     required Map<String, dynamic> row,
     required String columnId,
@@ -195,17 +229,48 @@ class DataRows extends _$DataRows {
     final table = ref.watch(tableProvider)!;
     final tables = ref.watch(tablesProvider)!;
     final view = ref.watch(viewProvider)!;
+    final globalFilter = ref.watch(globalFilterProvider);
 
     // This provider should be updated every time sort is updated.
     // final _ = ref.watch(sortListProvider(view.id));
 
     _pkName = table.pkName;
     final searchQuery = ref.watch(searchQueryFamily(view));
-    logger.info('searchQuery: $searchQuery');
+    
+    // Apply filters from global filter state only if table exposes a user name column (strict: "user")
+    SearchQuery? finalQuery = searchQuery;
+    const nameCandidates = ['user'];
 
-    return serialize(
-      await api.dbViewRowList(view: view, where: searchQuery),
-      fn: (result) => populate(result, table, tables.relationMap),
+    final userColumn = table.columns.firstWhereOrNull((c) {
+      final name = c.columnName?.toLowerCase();
+      final title = c.title.toLowerCase();
+      return nameCandidates.contains(name) || nameCandidates.contains(title);
+    });
+
+    if (userColumn != null && globalFilter.userId != null && globalFilter.userId!.isNotEmpty) {
+      final columnName = userColumn.columnName?.isNotEmpty == true
+          ? userColumn.columnName!
+          : userColumn.title;
+      logger.info('Applying user filter for user name: ${globalFilter.userId} on table ${table.title} column $columnName');
+      finalQuery = SearchQuery(
+        columnName: columnName,
+        operator: QueryOperator.eq,
+        query: globalFilter.userId!,
+      );
+      logger.info('Filter query: $finalQuery');
+    } else {
+      if (userColumn == null) {
+        logger.info('Table ${table.title} has no user name column; skipping user filter');
+      } else {
+        logger.info('No user filter applied. globalFilter.userId: ${globalFilter.userId}');
+      }
+    }
+
+    return _fetchRowsWithFallback(
+      view: view,
+      table: table,
+      relations: tables.relationMap,
+      where: finalQuery,
     );
   }
 
@@ -217,6 +282,7 @@ class DataRows extends _$DataRows {
 
     final tables = ref.read(tablesProvider)!;
     final view = ref.read(viewProvider)!;
+    final globalFilter = ref.read(globalFilterProvider);
     final value = state.value;
     if (value == null) {
       assert(false);
@@ -227,27 +293,43 @@ class DataRows extends _$DataRows {
     final pageInfo = value.pageInfo!;
 
     final searchQuery = ref.read(searchQueryFamily(view));
-    logger.info('searchQuery: $searchQuery');
+    
+    // Apply filters from global filter state (same as build method, strict: "user" column only)
+    SearchQuery? finalQuery = searchQuery;
+    const nameCandidates = ['user'];
 
-    serialize(
-      await api.dbViewRowList(
-        view: view,
-        offset: pageInfo.page * pageInfo.pageSize,
-        limit: pageInfo.pageSize,
-        where: searchQuery,
+    final userColumn = tables.table.columns.firstWhereOrNull((c) {
+      final name = c.columnName?.toLowerCase();
+      final title = c.title.toLowerCase();
+      return nameCandidates.contains(name) || nameCandidates.contains(title);
+    });
+
+    if (userColumn != null && globalFilter.userId != null && globalFilter.userId!.isNotEmpty) {
+      final columnName = userColumn.columnName?.isNotEmpty == true
+          ? userColumn.columnName!
+          : userColumn.title;
+      final userFilter = SearchQuery(
+        columnName: columnName,
+        operator: QueryOperator.eq,
+        query: globalFilter.userId!,
+      );
+      finalQuery = userFilter;
+    }
+
+    final result = await _fetchRowsWithFallback(
+      view: view,
+      table: tables.table,
+      relations: tables.relationMap,
+      where: finalQuery,
+      offset: pageInfo.page * pageInfo.pageSize,
+      limit: pageInfo.pageSize,
+    );
+
+    state = AsyncData(
+      NcRowList(
+        list: [...currentRows, ...result.list],
+        pageInfo: result.pageInfo,
       ),
-      fn: (result) {
-        state = AsyncData(
-          populate(
-            NcRowList(
-              list: [...currentRows, ...result.list],
-              pageInfo: result.pageInfo,
-            ),
-            tables.table,
-            tables.relationMap,
-          ),
-        );
-      },
     );
   }
 
@@ -472,4 +554,67 @@ class RowNested extends _$RowNested {
       return result;
     },
   );
+}
+/// Provider to fetch users from the database
+/// Assumes there's a "Users" or "nc_user" table in the project
+@riverpod
+Future<List<Map<String, dynamic>>> usersList(Ref ref) async {
+  final project = ref.watch(projectProvider);
+  if (project == null) {
+    logger.warning('Project is null when fetching users');
+    return [];
+  }
+
+  try {
+    // Get the project's tables
+    final tables = await ref.watch(tableListProvider(project.id).future);
+    logger.info('Found ${tables.list.length} tables in project');
+    
+    // Log all table names for debugging
+    for (final table in tables.list) {
+      logger.info('Table: ${table.title} (id: ${table.id})');
+    }
+    
+    // Find the Users table (common names: "Users", "nc_user", "User")
+    final usersTable = tables.list.firstWhereOrNull(
+      (table) =>
+          table.title.toLowerCase() == 'users' ||
+          table.title.toLowerCase() == 'nc_user' ||
+          table.title.toLowerCase() == 'user',
+    );
+
+    if (usersTable == null) {
+      logger.warning('Users table not found. Available tables: ${tables.list.map((t) => t.title).toList()}');
+      return [];
+    }
+
+    logger.info('Found users table: ${usersTable.title}');
+
+    // Get the first view of the Users table
+    final views = await ref.watch(viewListProvider(usersTable.id).future);
+    logger.info('Found ${views.list.length} views for users table');
+    
+    if (views.list.isEmpty) {
+      logger.warning('No views found for users table');
+      return [];
+    }
+
+    logger.info('Using view: ${views.list.first.title}');
+
+    // Fetch rows from the Users table
+    final rowsResult = await api.dbViewRowList(view: views.list.first);
+    final rows = unwrap(rowsResult) as NcRowList;
+    
+    logger.info('Fetched ${rows.list.length} user records');
+    if (rows.list.isNotEmpty) {
+      logger.info('First user record keys: ${rows.list.first.keys.toList()}');
+      logger.info('First user record: ${rows.list.first}');
+    }
+    
+    return rows.list;
+  } catch (e, s) {
+    logger.warning('Error fetching users: $e');
+    logger.warning(s);
+    return [];
+  }
 }

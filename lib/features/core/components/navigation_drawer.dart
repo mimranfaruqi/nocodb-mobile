@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:nocodb/common/settings.dart';
+import 'package:nocodb/features/core/components/filter_panel.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
 import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
@@ -57,37 +58,41 @@ class AppNavigationDrawer extends StatelessWidget {
           final currentTable = ref.watch(tableProvider);
           final currentView = ref.watch(viewProvider);
 
-          return ListView(
-            padding: EdgeInsets.zero,
+          return Column(
             children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
+              Expanded(
+                child: ListView(
+                  key: const PageStorageKey('navDrawerList'),
+                  padding: EdgeInsets.zero,
                   children: [
-                    Text(
-                      project.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                    DrawerHeader(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Text(
+                            project.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (currentTable != null)
+                            Text(
+                              currentTable.title,
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    if (currentTable != null)
-                      Text(
-                        currentTable.title,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
               ref
                   .watch(tableListProvider(project.id))
                   .when(
@@ -223,6 +228,14 @@ class AppNavigationDrawer extends StatelessWidget {
                     (value) => const HomeRoute().replace(context),
                   );
                 },
+              ),
+                  ],
+                ),
+              ),
+              const Divider(),
+              SizedBox(
+                height: 300,
+                child: const FilterPanel(),
               ),
             ],
           );
