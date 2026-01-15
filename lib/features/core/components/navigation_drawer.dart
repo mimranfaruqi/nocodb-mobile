@@ -55,7 +55,6 @@ class AppNavigationDrawer extends HookConsumerWidget {
             );
           }
 
-          final tableList = ref.watch(tableListProvider(project.id));
           final currentTable = ref.watch(tableProvider);
           final currentView = ref.watch(viewProvider);
 

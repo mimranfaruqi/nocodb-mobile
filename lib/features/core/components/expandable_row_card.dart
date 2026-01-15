@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:nocodb/common/flash_wrapper.dart';
+import 'package:nocodb/common/logger.dart';
+import 'package:nocodb/features/core/providers/providers.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
+import 'package:nocodb/routes.dart';
 
 class ExpandableRowCard extends HookConsumerWidget {
   const ExpandableRowCard({
@@ -74,21 +78,34 @@ class ExpandableRowCard extends HookConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Icon(Icons.expand_less),
-            PopupMenuButton(
+            PopupMenuButton<String>(
               itemBuilder: (context) => [
-                PopupMenuItem(
-                  child: const ListTile(title: Text('Edit')),
-                  onTap: () {
-                    // TODO: Navigate to row editor
-                  },
+                const PopupMenuItem<String>(
+                  value: 'edit',
+                  child: ListTile(
+                    leading: Icon(Icons.edit),
+                    title: Text('Edit'),
+                  ),
                 ),
-                PopupMenuItem(
-                  child: const ListTile(title: Text('Delete')),
-                  onTap: () async {
-                    // TODO: Delete row
-                  },
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: ListTile(
+                    leading: Icon(Icons.delete, color: Colors.red),
+                    title: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
                 ),
               ],
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  final pkValue = table.getPkFromRow(row).toString();
+                  await RowEditorRoute(id: pkValue).push(context);
+                } else if (value == 'delete') {
+                  _showDeleteConfirmation(context, ref);
+                }
+              },
             ),
           ],
         ),
@@ -117,4 +134,48 @@ class ExpandableRowCard extends HookConsumerWidget {
         }).toList(),
       ],
     );
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Row'),
+        content: const Text(
+          'Are you sure you want to delete this row? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteRow(context, ref);
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteRow(BuildContext context, WidgetRef ref) async {
+    try {
+      final pkValue = table.getPkFromRow(row).toString();
+      await ref.read(dataRowsProvider.notifier).deleteRow(rowId: pkValue);
+      if (context.mounted) {
+        notifySuccess(context, message: 'Row deleted successfully');
+      }
+    } catch (e, s) {
+      logger.shout(e);
+      logger.fine(s.toString());
+      if (context.mounted) {
+        notifyError(context, e, s);
+      }
+    }
+  }
 }
