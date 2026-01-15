@@ -8,7 +8,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:nocodb/common/preferences.dart';
 import 'package:nocodb/common/settings.dart';
-import 'package:nocodb/router.dart';
+import 'package:nocodb/common/directus_settings.dart';
+import 'package:nocodb/directus_router.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 const useMaterial3 = false;
@@ -38,13 +39,14 @@ class App extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final r = ref.watch(routerProvider);
+    final r = ref.watch(directusRouterProvider);
 
     return BackButtonInterceptor(
       child: GlobalLoaderOverlay(
         child: MaterialApp.router(
           debugShowCheckedModeBanner: false,
           routerConfig: r,
+          title: 'Directus Mobile',
           theme: useMaterial3
               ? ThemeData(useMaterial3: true, colorSchemeSeed: Colors.black)
               : ThemeData(useMaterial3: false, primarySwatch: Colors.blue),
@@ -106,13 +108,13 @@ class _BackButtonInterceptorState extends State<BackButtonInterceptor> {
 
   Future<bool> _isUserLoggedIn() async {
     try {
-      if (!settings.initialized) {
+      if (!directusSettings.initialized) {
         final prefs = Preferences();
         await prefs.load();
-        settings.init(prefs);
+        directusSettings.init(prefs);
       }
-      final s = await settings.get();
-      return s != null;
+      final credentials = await directusSettings.get();
+      return credentials != null;
     } catch (e) {
       return false;
     }
@@ -132,9 +134,8 @@ class _BackButtonInterceptorState extends State<BackButtonInterceptor> {
         
         // If user is logged in, prevent back navigation to login
         if (isLoggedIn) {
-          // Check if we're on main screens (project list)
-          final isMainScreen = currentRoute.startsWith('/project_list') || 
-                               currentRoute.startsWith('/cloud_project_list');
+          // Check if we're on main screens (collections list)
+          final isMainScreen = currentRoute.startsWith('/directus/collections');
           
           if (isMainScreen) {
             // We're on a main screen - show exit confirmation
