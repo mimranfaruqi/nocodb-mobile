@@ -27,8 +27,7 @@ class ColumnSelector extends HookConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     List<String> selectedIds,
-  ) {
-    return AlertDialog(
+  ) => AlertDialog(
       title: const Text('Select Columns'),
       content: SingleChildScrollView(
         child: Column(
@@ -54,5 +53,4 @@ class ColumnSelector extends HookConsumerWidget {
         ),
       ],
     );
-  }
 }

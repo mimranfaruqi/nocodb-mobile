@@ -204,14 +204,12 @@ class Grid extends HookConsumerWidget {
                   ),
                 ),
                 // Expandable rows
-                ...rows.map((row) {
-                  return ExpandableRowCard(
+                ...rows.map((row) => ExpandableRowCard(
                     row: row,
                     columns: selectedColumns,
                     table: tables.table,
                     onTap: () {},
-                  );
-                }).toList(),
+                  )),
                 const SizedBox(height: 100),
               ],
             ),

@@ -7,7 +7,6 @@ import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/nocodb_sdk/client.dart';
 import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/nocodb_sdk/utils.dart';
-import 'package:nocodb/features/core/providers/utils.dart';
 import 'package:nocodb/routes.dart';
 
 class SignInPage extends HookConsumerWidget {

@@ -5,8 +5,6 @@ import 'package:nocodb/common/settings.dart';
 import 'package:nocodb/features/core/components/filter_panel.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
 import 'package:nocodb/features/core/providers/utils.dart';
-import 'package:nocodb/nocodb_sdk/client.dart';
-import 'package:nocodb/nocodb_sdk/models.dart';
 import 'package:nocodb/routes.dart';
 
 /// A hierarchical navigation drawer showing tables and their views

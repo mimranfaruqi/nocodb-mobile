@@ -45,9 +45,7 @@ class SelectedViewColumns extends _$SelectedViewColumns {
   }
 
   @override
-  Future<List<String>> build(String viewId) async {
-    return await _loadFromStorage(viewId);
-  }
+  Future<List<String>> build(String viewId) async => await _loadFromStorage(viewId);
 
   /// Update selected columns and persist
   Future<void> updateColumns(String viewId, List<String> columnIds) async {

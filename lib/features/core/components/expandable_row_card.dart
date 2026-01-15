@@ -42,8 +42,7 @@ class ExpandableRowCard extends HookConsumerWidget {
     );
   }
 
-  Widget _buildCollapsedSummary(BuildContext context) {
-    return Row(
+  Widget _buildCollapsedSummary(BuildContext context) => Row(
       children: [
         const Icon(Icons.expand_more),
         const SizedBox(width: 12),
@@ -66,10 +65,8 @@ class ExpandableRowCard extends HookConsumerWidget {
         ),
       ],
     );
-  }
 
-  Widget _buildExpandedForm(BuildContext context, WidgetRef ref) {
-    return Column(
+  Widget _buildExpandedForm(BuildContext context, WidgetRef ref) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -120,5 +117,4 @@ class ExpandableRowCard extends HookConsumerWidget {
         }).toList(),
       ],
     );
-  }
 }
