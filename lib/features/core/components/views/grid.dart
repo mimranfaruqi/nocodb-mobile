@@ -11,7 +11,10 @@ import 'package:nocodb/common/extensions.dart';
 import 'package:nocodb/common/flash_wrapper.dart';
 import 'package:nocodb/common/logger.dart';
 import 'package:nocodb/features/core/components/cell.dart';
+import 'package:nocodb/features/core/components/dialog/column_selector_dialog.dart';
+import 'package:nocodb/features/core/components/expandable_row_card.dart';
 import 'package:nocodb/features/core/providers/providers.dart';
+import 'package:nocodb/features/core/providers/view_columns_provider.dart';
 import 'package:nocodb/nocodb_sdk/models.dart' as model;
 import 'package:nocodb/nocodb_sdk/symbols.dart';
 
@@ -72,6 +75,9 @@ class Grid extends HookConsumerWidget {
     final view = ref.watch(viewProvider)!;
 
     final columns = ref.watch(fieldsProvider(view)).valueOrNull?.toList() ?? [];
+    final selectedColumnsAsync =
+        ref.watch(selectedViewColumnsProvider(view.id));
+
     logger
       ..info('view: ${view.title} has ${columns.length} columns(s).')
       ..info('columns: ${columns.map((e) => e.title).toList()}');
@@ -80,97 +86,47 @@ class Grid extends HookConsumerWidget {
     logger.info('pageInfo: ${dataRow?.pageInfo}');
     final rows = dataRow?.list ?? [];
 
-    Widget content;
+    return selectedColumnsAsync.when(
+      data: (selectedIds) => _buildView(
+        context,
+        ref,
+        rows,
+        columns,
+        selectedIds,
+        tables,
+        view,
+        verticalController,
+        horizontalController,
+      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => Center(child: Text('Error: $error')),
+    );
+  }
 
-    if (columns.isEmpty) {
-      content = const Center(
-        child: Text('No columns.'),
-      );
-    } else if (rows.isEmpty) {
-      content = const Center(
-        child: Text('Empty.'),
-      );
-    } else {
-      final dataColumns = columns.map((c) { 
-        final type = [UITypes.links, UITypes.linkToAnotherRecord]
-                .contains(c.uidt)
-            ? c.relationType.value
-            : c.uidt.value.capitalize();
-        return DataColumn2(
-          fixedWidth: _dataColumnWidth,
-          label: Text(
-            '${c.title}\n$type',
-            overflow: TextOverflow.ellipsis,
-          ),
-        );
-      }).toList();
+  Widget _buildView(
+    BuildContext context,
+    WidgetRef ref,
+    List<Map<String, dynamic>> rows,
+    List<model.NcTableColumn> allColumns,
+    List<String> selectedColumnIds,
+    model.NcTables tables,
+    model.NcView view,
+    ScrollController verticalController,
+    ScrollController horizontalController,
+  ) {
+    // Filter columns to only selected ones
+    final selectedColumns = selectedColumnIds.isEmpty
+        ? allColumns
+        : allColumns
+            .where((c) => selectedColumnIds.contains(c.id))
+            .toList();
 
-      final tableWidth = dataColumns
-          .map((c) => c.fixedWidth)
-          .whereNotNull()
-          .reduce((a, b) => a + b);
+    if (allColumns.isEmpty) {
+      return const Center(child: Text('No columns.'));
+    }
 
-      final w = PlatformDispatcher.instance.views.first;
-      final size = w.physicalSize / w.devicePixelRatio;
-      final screenWidth = size.width;
-      final blankLength = tableWidth < screenWidth
-          ? ((size.width - tableWidth) ~/ _blankDataColumnWidth) + 1
-          : 0;
-      logger.fine('tableWidth: $tableWidth, screenWidth: $screenWidth');
-
-      if (0 < blankLength) {
-        logger.info(
-          'add $blankLength blank column(s) to adjust the spacing.',
-        );
-      }
-
-      final dataRows = rows.map(
-        (row) => DataRow2(
-          cells: _buildDataCellList(
-            row,
-            columns,
-            tables,
-            ref,
-            blankLength,
-          ).toList(),
-        ),
-      );
-
-      dataColumns.addAll(
-        List.generate(blankLength, (i) => _blankDataColumn),
-      );
-
-      final adjustedMinWidth = dataColumns
-          .map((c) => c.fixedWidth)
-          .whereNotNull()
-          .reduce((a, b) => a + b);
-
-      content = SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        controller: horizontalController,
-        child: DataTable2(
-          checkboxHorizontalMargin: 0,
-          columnSpacing: 24,
-          horizontalMargin: 24,
-          dividerThickness: 1,
-          showBottomBorder: true,
-          border: TableBorder.all(
-            width: 0.1,
-          ),
-          columns: dataColumns,
-          rows: dataRows.toList(),
-          // FIXME: Without adjusting minWidth, the following assertion error occurs.
-          // ======== Exception caught by widgets library =======================================================
-          // The following assertion was thrown building SyncedScrollControllers(dependencies: [ScrollConfiguration, _InheritedTheme, _LocalizationsScope-[GlobalKey#fb890]], state: SyncedScrollControllersState#aa918):
-          // DataTable2, combined width of columns of fixed width is greater than availble parent width. Table will be clipped
-          // 'package:data_table_2/src/data_table_2.dart':
-          // Failed assertion: line 1133 pos 12: 'totalFixedWidth < totalColAvailableWidth'
-          //
-          // The relevant error-causing widget was:
-          // ...
-          minWidth: adjustedMinWidth + 50,
-        ),
-      );
+    if (rows.isEmpty) {
+      return const Center(child: Text('Empty.'));
     }
 
     void handleVerticalScroll() {
@@ -224,25 +180,40 @@ class Grid extends HookConsumerWidget {
           }
           return false;
         },
-        child: ListView(
-          controller: verticalController,
-          physics: const AlwaysScrollableScrollPhysics(),
+        child: Stack(
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: content,
-            ),
-            SizedBox(
-              height: 200,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onHorizontalDragUpdate: (details) {
-                  final position = horizontalController.position;
-                  final target = (position.pixels - details.delta.dx)
-                      .clamp(position.minScrollExtent, position.maxScrollExtent);
-                  horizontalController.jumpTo(target);
-                },
-              ),
+            ListView(
+              controller: verticalController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                // Column selector button
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => ColumnSelector(
+                          view: view,
+                          columns: allColumns,
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.view_column),
+                    label: const Text('Select Columns'),
+                  ),
+                ),
+                // Expandable rows
+                ...rows.map((row) {
+                  return ExpandableRowCard(
+                    row: row,
+                    columns: selectedColumns,
+                    table: tables.table,
+                    onTap: () {},
+                  );
+                }).toList(),
+                const SizedBox(height: 100),
+              ],
             ),
           ],
         ),
