@@ -13,7 +13,7 @@ class DirectusClient {
   Uri _buildUri(String path, [Map<String, dynamic>? queryParams]) {
     final uri = Uri.parse(baseUrl);
     return uri.replace(
-      path: '/api${path}',
+      path: path,
       queryParameters: queryParams?.map(
         (key, value) => MapEntry(key, value.toString()),
       ),
